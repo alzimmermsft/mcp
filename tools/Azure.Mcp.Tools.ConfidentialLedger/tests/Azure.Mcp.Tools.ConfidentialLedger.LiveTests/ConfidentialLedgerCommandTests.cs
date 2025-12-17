@@ -4,22 +4,25 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.LiveTests;
 
-public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class ConfidentialLedgerCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_append_entry_successfully()
     {
         // Arrange
-        var ledgerName = Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"];
+        var ledgerName = RegisterOrRetrieveVariable("ledgerName", Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"]);
+        var timestamp = RegisterOrRetrieveVariable("timestamp", DateTime.UtcNow.ToString("o"));
+        var testRun = RegisterOrRetrieveVariable("testRun", Guid.NewGuid().ToString());
         var testContent = $$"""
             {
                 "message": "Live test entry",
-                "timestamp": "{{DateTime.UtcNow:o}}",
-                "testRun": "{{Guid.NewGuid()}}"
+                "timestamp": "{{timestamp}}",
+                "testRun": "{{testRun}}"
             }
             """;
 
@@ -55,12 +58,13 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_append_entry_with_collection_id()
     {
         // Arrange
-        var ledgerName = Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"];
+        var ledgerName = RegisterOrRetrieveVariable("ledgerName", Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"]);
+        var timestamp = RegisterOrRetrieveVariable("timestamp", DateTime.UtcNow.ToString("o"));
         var collectionId = "test-collection";
         var testContent = $$"""
             {
                 "collectionTest": true,
-                "timestamp": "{{DateTime.UtcNow:o}}"
+                "timestamp": "{{timestamp}}"
             }
             """;
 
@@ -91,11 +95,12 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
     [Fact]
     public async Task Should_get_entry()
     {
-        var ledgerName = Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"];
+        var ledgerName = RegisterOrRetrieveVariable("ledgerName", Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"]);
+        var timestamp = RegisterOrRetrieveVariable("timestamp", DateTime.UtcNow.ToString("o"));
         var testContent = $$"""
             {
                 "collectionTest": false,
-                "timestamp": "{{DateTime.UtcNow:o}}"
+                "timestamp": "{{timestamp}}"
             }
             """;
 
@@ -108,21 +113,21 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
             });
 
         Assert.NotNull(appendResult);
-        var transactionId = appendResult.Value.AssertProperty("transactionId");
-        Assert.False(string.IsNullOrWhiteSpace(transactionId.GetString()));
+        var transactionId = RegisterOrRetrieveVariable("transactionId", appendResult.Value.AssertProperty("transactionId").GetString()!);
+        Assert.False(string.IsNullOrWhiteSpace(transactionId));
 
         var getResult = await CallToolAsync(
             "confidentialledger_entries_get",
             new()
             {
                 { "ledger", ledgerName },
-                { "transaction-id", transactionId.GetString()! }
+                { "transaction-id", transactionId }
             });
 
         Assert.NotNull(getResult);
 
         var entryTransactionId = getResult.Value.AssertProperty("transactionId");
-        Assert.Equal(entryTransactionId.GetString(), transactionId.GetString());
+        Assert.Equal(entryTransactionId.GetString(), transactionId);
 
         var contents = getResult.Value.AssertProperty("contents");
         Assert.Equal(JsonValueKind.String, contents.ValueKind);

@@ -4,6 +4,7 @@
 using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
@@ -16,6 +17,14 @@ public class ConfidentialLedgerService(ITenantService tenantService)
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
     private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");
+
+    private ConfidentialLedgerClient CreateClient(string ledgerName, TokenCredential credential)
+    {
+        var options = new ConfidentialLedgerClientOptions();
+        options.Transport = new HttpClientTransport(TenantService.GetClient());
+
+        return new(BuildLedgerUri(ledgerName), credential, options);
+    }
 
     private static RequestContent CreateAppendEntryContent(string entryData)
     {
@@ -43,7 +52,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         var credential = await GetCredential(cancellationToken);
 
         // Configure client (retry etc. could be extended later)
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+        var client = CreateClient(ledgerName, credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
@@ -74,9 +83,7 @@ public class ConfidentialLedgerService(ITenantService tenantService)
         }
 
         var credential = await GetCredential(cancellationToken);
-        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
-
-        Response? getByCollectionResponse = null;
+        var client = CreateClient(ledgerName, credential);
         bool loaded = false;
         string? contents = null;
         string? actualTransactionId = null;
@@ -88,14 +95,14 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             {
                 throw new TimeoutException($"Timed out waiting for ledger entry to load after 15 seconds. Transaction ID: {transactionId}");
             }
-            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            var getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
             using (JsonDocument jsonDoc = JsonDocument.Parse(getByCollectionResponse.Content))
             {
                 loaded = jsonDoc.RootElement.GetProperty("state").GetString() != "Loading";
                 if (!loaded)
                 {
                     // Add a small delay to avoid tight polling
-                    await Task.Delay(500, cts.Token).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), cts.Token).ConfigureAwait(false);
                 }
                 else
                 {
