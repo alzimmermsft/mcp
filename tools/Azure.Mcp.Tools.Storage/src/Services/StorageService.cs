@@ -221,7 +221,7 @@ public class StorageService(
                 properties.CopyStatus.ToString(),
                 properties.CopySource,
                 properties.CopyCompletedOn,
-                properties.AccessTier.ToString(),
+                properties.AccessTier,
                 properties.AccessTierChangedOn,
                 properties.HasLegalHold,
                 properties.CreatedOn,

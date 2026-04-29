@@ -86,16 +86,13 @@ public class SubscriptionService(
     }
 
     // TODO (alzimmer): Why does this method take tenant?
-    public bool IsSubscriptionId(string subscription, string? tenant = null)
-    {
-        return Guid.TryParse(subscription, out _);
-    }
+    public bool IsSubscriptionId(string subscription, string? tenant = null) => Guid.TryParse(subscription, out _);
 
     public async Task<string> GetSubscriptionIdByName(string subscriptionName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
-            throw new Exception($"Could not find subscription with name {subscriptionName}");
+            throw new KeyNotFoundException($"Could not find subscription with name {subscriptionName}");
 
         return subscription.SubscriptionId;
     }
@@ -104,16 +101,13 @@ public class SubscriptionService(
     {
         var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
-            throw new Exception($"Could not find subscription with ID {subscriptionId}");
+            throw new KeyNotFoundException($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
     }
 
     /// <inheritdoc/>
-    public string? GetDefaultSubscriptionId()
-    {
-        return CommandHelper.GetDefaultSubscription();
-    }
+    public string? GetDefaultSubscriptionId() => CommandHelper.GetDefaultSubscription();
 
     private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {

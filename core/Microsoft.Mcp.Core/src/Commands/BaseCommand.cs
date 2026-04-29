@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -66,14 +67,20 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     protected virtual void HandleException(CommandContext context, Exception ex)
     {
+        var exception = ex;
+        if (ex is TelemetrySafeException)
+        {
+            exception = ex.InnerException!; // Unwrap the original exception for further processing, known non-null.
+        }
+
         context.Activity?.SetStatus(ActivityStatusCode.Error)
-            ?.SetTag(TagName.ExceptionType, ex.GetType().ToString())
-            ?.SetTag(TagName.ExceptionStackTrace, ex.StackTrace);
+            ?.SetTag(TagName.ExceptionType, exception.GetType().ToString())
+            ?.SetTag(TagName.ExceptionStackTrace, exception.StackTrace);
 
         var response = context.Response;
 
         // Handle structured validation errors first
-        if (ex is CommandValidationException cve)
+        if (exception is CommandValidationException cve)
         {
             response.Status = cve.StatusCode;
             // If specific missing options are provided, format a consistent message
@@ -91,33 +98,45 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
             response.Results = null;
             return;
         }
-        else if (ex is RequestFailedException failedException)
+
+        // Start with just adding the status code of the exception, this is the only PII safe property.
+        var exceptionMessage = new JsonObject([new("StatusCode", (int)GetStatusCode(exception))]);
+        if (exception is RequestFailedException failedException)
         {
             // For RequestFailedException, we can include the error code and request ID.
-            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([
-                new("StatusCode", failedException.Status),
-                new("ErrorCode", failedException.ErrorCode),
-                new("RequestId", failedException.GetRawResponse()?.ClientRequestId)
-            ]));
+            exceptionMessage.Add("ErrorCode", failedException.ErrorCode);
+            exceptionMessage.Add("RequestId", failedException.GetRawResponse()?.ClientRequestId);
         }
-        else
+        else if (exception is MsalServiceException msalServiceException)
         {
-            // All other cases, include the status code for now until we can determine a better way to capture error
-            // details without risking PII leakage.
-            context.Activity?.SetTag(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)GetStatusCode(ex))]));
+            // For MSAL exceptions, we can include the error code and correlation ID.
+            exceptionMessage.Add("ErrorCode", msalServiceException.ErrorCode);
+            exceptionMessage.Add("RequestId", msalServiceException.CorrelationId);
+        }
+        else if (exception is MsalClientException msalClientException)
+        {
+            // For MSAL client exceptions, we can include the error code.
+            exceptionMessage.Add("ErrorCode", msalClientException.ErrorCode);
+            exceptionMessage.Add("RequestId", msalClientException.CorrelationId);
+        }
+
+        if (ex is TelemetrySafeException)
+        {
+            // If it's a TelemetrySafeException, we can include the error message in the telemetry as it's known PII safe.
+            exceptionMessage.Add("Message", ex.Message);
         }
 
         var result = new ExceptionResult(
-            Message: ex.Message ?? string.Empty,
+            Message: exception.Message ?? string.Empty,
 #if DEBUG
-            StackTrace: ex.StackTrace,
+            StackTrace: exception.StackTrace,
 #else
             StackTrace: null,
 #endif
-            Type: ex.GetType().Name);
+            Type: exception.GetType().Name);
 
-        response.Status = GetStatusCode(ex);
-        response.Message = GetErrorMessage(ex) + $". To mitigate this issue, please refer to the troubleshooting guidelines here at {TroubleshootingUrl}.";
+        response.Status = GetStatusCode(exception);
+        response.Message = GetErrorMessage(exception) + $". To mitigate this issue, please refer to the troubleshooting guidelines here at {TroubleshootingUrl}.";
         response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ExceptionResult);
     }
 
@@ -128,6 +147,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
+        RequestFailedException reqFailedEx => (HttpStatusCode)reqFailedEx.Status,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
     };
 

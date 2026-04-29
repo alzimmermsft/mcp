@@ -6,6 +6,7 @@ using System.Net;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
@@ -123,6 +124,7 @@ public abstract class GlobalCommand<
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
+        MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
         _ => HttpStatusCode.InternalServerError
     };

@@ -74,10 +74,7 @@ public class TenantService : BaseAzureService, ITenantService
     }
 
     /// <inheritdoc/>
-    public bool IsTenantId(string tenantId)
-    {
-        return Guid.TryParse(tenantId, out _);
-    }
+    public bool IsTenantId(string tenantId) => Guid.TryParse(tenantId, out _);
 
     /// <inheritdoc/>
     public async Task<string> GetTenantId(string tenantIdOrName, CancellationToken cancellationToken)
@@ -123,8 +120,5 @@ public class TenantService : BaseAzureService, ITenantService
     }
 
     /// <inheritdoc/>
-    public HttpClient GetClient()
-    {
-        return _httpClientFactory.CreateClient();
-    }
+    public HttpClient GetClient() => _httpClientFactory.CreateClient();
 }
