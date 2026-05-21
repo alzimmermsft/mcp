@@ -87,6 +87,7 @@
     <PackageVersion Include="Microsoft.DataFactory.MCP.Core" Version="0.21.0-beta" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Purview.SDK" Version="0.1.1" />
     <PackageVersion Include="ModelContextProtocol" Version="1.1.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.1.0" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />

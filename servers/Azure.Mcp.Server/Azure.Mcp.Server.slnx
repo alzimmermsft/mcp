@@ -312,6 +312,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Pricing/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Pricing/tests/Azure.Mcp.Tools.Pricing.Tests/Azure.Mcp.Tools.Pricing.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Purview/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Purview/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Purview/src/Azure.Mcp.Tools.Purview.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Purview/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Purview/tests/Azure.Mcp.Purview.Tests/Azure.Mcp.Purview.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Quota/src/Azure.Mcp.Tools.Quota.csproj" />

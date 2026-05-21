@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
+using Azure.ResourceManager.MySql;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
