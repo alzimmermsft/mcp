@@ -1,7 +1,23 @@
 # Release History
 
+## 3.0.12 (2026-05-22) (pre-release)
 
-## 3.0.0-beta.11 (2026-05-19) (pre-release)
+### Added
+
+- Added a new `--nfs-encryption-in-transit` option to File Shares `create`/`update` tools. [[#2648](https://github.com/microsoft/mcp/pull/2648)]
+
+### Fixed
+
+- Updated Container App tools to accept a `--tenant` parameter. [[#2702](https://github.com/microsoft/mcp/pull/2702)]
+- Fixed not-found conditions in `SubscriptionService`, `TenantService`, and `ResourceGroupService` returning HTTP `500`/`400` instead of HTTP `404`. [[#2703](https://github.com/microsoft/mcp/pull/2703)]
+- Updated App Lens tools to return a response with a "resource not found" message instead of throwing an exception when no resource matches the given name, so telemetry no longer reports these expected cases as tool failures. [[#2700](https://github.com/microsoft/mcp/pull/2700)]
+- Fixed issues in Key Vault tools: [[#2671](https://github.com/microsoft/mcp/pull/2671)]
+  - `keyvault admin settings get` now correctly applies the default retry policy
+  - `keyvault certificate import` now returns HTTP status code `400` for invalid certificate data instead of `500`
+  - `keyvault key create` now accepts the correct valid types (RSA, RSA-HSM, EC, EC-HSM) for the `--key-type` parameter
+  - `keyvault key list` now includes all keys (managed and non-managed) when `--include-managed` is `true` instead of returning only managed keys
+
+## 3.0.11 (2026-05-20) (pre-release)
 
 ### Added
 
@@ -33,7 +49,8 @@
     - `azurebackup_governance_soft-delete`
     - `azurebackup_disasterrecovery_enable-crr`
   - Fixed serialization issue in `azurebackup_job_get` by handling `FormatException`s thrown from the Azure SDK's `XmlConvert.ToTimeSpan` in `DppBackupOperations.ListJobsAsync`
-  - Fixed telemetry tags not being emitted by returning `"auto"`/`"unspecified"` instead of `null` for unset values, since `Activity.AddTag(key, null)` is a no-op in .NET
+  - Fixed telemetry tags not being emitted by returning `"auto"`/`"unspecified"` instead of `null` for unset values, since `Activity.AddTag(key, null)` is a no-op in .NET\
+- Removed restrictions on what kinds of web sites the AppLens tool can diagnose. [[#2596](https://github.com/microsoft/mcp/pull/2596)]
 
 ## 3.0.10 (2026-05-07) (pre-release)
 
