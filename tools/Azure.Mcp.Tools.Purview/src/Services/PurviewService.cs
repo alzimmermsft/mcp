@@ -1,77 +1,102 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ClientModel.Primitives;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Purview.SDK.Client;
-using Microsoft.Purview.SDK.ClientSettings;
-using Microsoft.Purview.SDK.Models;
-using Microsoft.Purview.SDK.Models.Requests;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Purview.Services;
 
 /// <summary>
 /// Service implementation for Microsoft Purview operations.
 /// </summary>
-public sealed class PurviewService(
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<PurviewService> logger) : BaseAzureService(tenantService), IPurviewService
+public sealed class PurviewService(ITenantService tenantService, ILogger<PurviewService> logger)
+    : BaseAzureService(tenantService), IPurviewService
 {
-    public async Task GetSensitivityLabelsAndRightsAsync(
-        string purviewAccountName,
-        string tenantId,
+    private readonly ILogger<PurviewService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    public async Task<List<PolicyUserScope>?> ComputeProtectionScopesAsync(
+        string userId,
+        List<string>? activities = null,
+        List<string>? policyLocations = null,
+        string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        using var client = CreatePurviewClient();
-        var credential = await GetCredential(tenantId, cancellationToken);
-        credential.GetTokenAsync(new Azure.Core.TokenRequestContext())
-        GetAzureCredentials(subscriptionId, tenantId);
-        var requestOptions = new ClientRequestOptions
-        {
+        var tokenCredential = await GetCredential(tenantId, cancellationToken);
+        var httpClient = TenantService.GetClient();
+        httpClient.BaseAddress = GetBaseAddress();
+        using var graphClient = new GraphServiceClient(httpClient, tokenCredential);
 
-            AuthTokenRetriever = ()
-            CancellationToken = cancellationToken,
-        };
-        client.GetSensitivityLabelsAndRightsAsync()
-        throw new NotImplementedException();
+        var response = await graphClient.Users[userId].DataSecurityAndGovernance.ProtectionScopes.Compute.PostAsComputePostResponseAsync(new()
+        {
+            Activities = ConvertToUserActivityTypes(activities),
+            Locations = ConvertToPolicyLocations(policyLocations)
+        }, cancellationToken: cancellationToken);
+
+        return response?.Value;
     }
 
-    private PurviewClient CreatePurviewClient()
+    private static UserActivityTypes? ConvertToUserActivityTypes(List<string>? activities)
     {
-        var settings = new PurviewClientSettings
+        if (activities == null || activities.Count == 0)
         {
-            TenantId = tenantId ?? TenantService.GetTenantId(tenantId),
-        };
-        var credentials = GetAzureCredentials(subscriptionId, tenantId);
-        var httpClient = httpClientFactory.CreateClient();
-        return new(settings);
-    }
-
-    private async ClientRequestOptions CreateClientRequestOptions(string tenantId, RetryPolicyOptions? retryPolicyOptions, CancellationToken cancellationToken)
-    {
-        var credential = await GetCredential(tenantId, cancellationToken);
-        var requestOptions = new ClientRequestOptions();
-
-        if (retryPolicyOptions != null)
-        {
-            if (retryPolicyOptions.MaxRetries.HasValue)
-            {
-                requestOptions.RetryOptions.MaxRetryAttempts = retryPolicyOptions.MaxRetries.Value;
-            }
-            if (retryPolicyOptions.DelaySeconds.HasValue)
-            {
-                requestOptions.RetryOptions.RetryWaitInMs = (int)(retryPolicyOptions.DelaySeconds.Value * 1000); // Convert seconds to milliseconds
-            }
-            if (retryPolicyOptions.NetworkTimeoutSeconds.HasValue)
-            {
-                requestOptions.RequestTimeoutInMilliseconds = (long)(retryPolicyOptions.NetworkTimeoutSeconds.Value * 1000); // Convert seconds to milliseconds
-            }
+            return null;
         }
 
-        return requestOptions;
+        UserActivityTypes result = 0;
+        foreach (var activity in activities)
+        {
+            if (Enum.TryParse<UserActivityTypes>(activity, ignoreCase: true, out var parsed))
+            {
+                result |= parsed;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid activity type: {activity}. Valid values are 'uploadText', 'downloadText', etc. (case-insensitive).");
+            }
+        }
+        return result;
     }
+
+    private static List<PolicyLocation>? ConvertToPolicyLocations(List<string>? policyLocations)
+    {
+        if (policyLocations == null)
+        {
+            return null;
+        }
+
+        var locations = new List<PolicyLocation>();
+        foreach (var loc in policyLocations)
+        {
+            var parts = loc.Split(':', 2);
+            if (parts.Length != 2)
+            {
+                throw new ArgumentException($"Invalid policy location format: {loc}. Expected format is 'kind:location'.");
+            }
+
+            var kind = parts[0].Trim();
+            var location = parts[1].Trim();
+            PolicyLocation policyLocation = kind.ToLower() switch
+            {
+                "policylocationapplication" => new PolicyLocationApplication { Value = location },
+                "policylocationdomain" => new PolicyLocationDomain { Value = location },
+                "policylocationurl" => new PolicyLocationUrl { Value = location },
+                _ => throw new ArgumentException($"Invalid policy location kind: {kind}. Valid kinds are 'policyLocationApplication', 'policyLocationDomain', 'policyLocationUrl' (case-insensitive).")
+            };
+
+            locations.Add(policyLocation);
+        }
+        return locations;
+    }
+
+    private Uri GetBaseAddress() => TenantService.CloudConfiguration.CloudType switch
+    {
+        AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new("https://graph.microsoft.com/v1/"),
+        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new("https://microsoftgraph.chinacloudapi.cn/v1/"),
+        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new("https://graph.microsoft.us/v1/"),
+        _ => throw new NotSupportedException($"The cloud type {TenantService.CloudConfiguration.CloudType} is not supported.")
+    };
 }

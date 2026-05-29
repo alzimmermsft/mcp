@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Purview.Commands.ProtectionScopes;
+using Azure.Mcp.Tools.Purview.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -18,6 +20,9 @@ public class PurviewSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IPurviewService, PurviewService>();
+
+        services.AddSingleton<ComputeCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -25,10 +30,16 @@ public class PurviewSetup : IAreaSetup
         var purview = new CommandGroup(
             Name,
             """
-            Microsoft Purview operations - Manage and interact with Microsoft Purview resources, including creating and
-            configuring Purview accounts, scanning data sources, managing classifications and glossary terms, and querying the Purview catalog.
+            Microsoft Purview operations - Manage and interact with Microsoft Purview resources, including computing
+            protection scopes.
             """,
             Title);
+
+        var protectionScopes = new CommandGroup(
+            "protection-scopes",
+            "Commands for computing protection scopes for users in Microsoft Purview.");
+        protectionScopes.AddCommand(serviceProvider.GetRequiredService<ComputeCommand>());
+        purview.AddSubGroup(protectionScopes);
 
         return purview;
     }
