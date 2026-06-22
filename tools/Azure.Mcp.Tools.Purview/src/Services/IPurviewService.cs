@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Graph.Models;
+using Microsoft.Purview.SDK.Models.ProtectionScopes;
 
 namespace Azure.Mcp.Tools.Purview.Services;
 
@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.Purview.Services;
 /// </summary>
 public interface IPurviewService
 {
-    Task<List<PolicyUserScope>?> ComputeProtectionScopesAsync(
+    Task<IReadOnlyCollection<PolicyUserScope>?> ComputeProtectionScopesAsync(
         string userId,
         List<string>? activities = null,
         List<string>? policyLocations = null,

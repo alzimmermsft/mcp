@@ -4,9 +4,9 @@
 using Azure.Mcp.Tools.Purview.Options.ProtectionScopes;
 using Azure.Mcp.Tools.Purview.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Purview.SDK.Models.ProtectionScopes;
 
 namespace Azure.Mcp.Tools.Purview.Commands.ProtectionScopes;
 
@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Purview.Commands.ProtectionScopes;
 public sealed class ComputeCommand(ILogger<ComputeCommand> logger, IPurviewService service)
     : AuthenticatedCommand<ComputeOptions, ComputeCommand.ComputeResults>()
 {
-    private static readonly string s_validActivities = string.Join(", ", Enum.GetNames<UserActivityTypes>().Select(a => $"'{a}'"));
+    private static readonly string s_validActivities = string.Join(", ", Enum.GetNames<ProtectionScopeActivities>().Select(a => $"'{a}'"));
     private static readonly HashSet<string> s_validPolicyLocations = new(["policyLocationApplication", "policyLocationDomain", "policyLocationUrl"], StringComparer.OrdinalIgnoreCase);
     private readonly ILogger<ComputeCommand> _logger = logger;
     private readonly IPurviewService _service = service;
@@ -39,7 +39,7 @@ public sealed class ComputeCommand(ILogger<ComputeCommand> logger, IPurviewServi
         base.ValidateOptions(options, validationResult);
         if (options.Activities is { Count: > 0 })
         {
-            var invalidActivities = options.Activities.Where(activity => !Enum.TryParse<UserActivityTypes>(activity, ignoreCase: true, out _))
+            var invalidActivities = options.Activities.Where(activity => !Enum.TryParse<ProtectionScopeActivities>(activity, ignoreCase: true, out _))
                 .Select(a => $"'{a}'")
                 .ToList();
             if (invalidActivities.Count > 0)
@@ -88,5 +88,5 @@ public sealed class ComputeCommand(ILogger<ComputeCommand> logger, IPurviewServi
         return context.Response;
     }
 
-    public sealed record ComputeResults(List<PolicyUserScope> Scopes);
+    public sealed record ComputeResults(IReadOnlyCollection<PolicyUserScope> Scopes);
 }

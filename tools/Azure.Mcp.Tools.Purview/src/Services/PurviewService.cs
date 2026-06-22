@@ -4,52 +4,82 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph;
-using Microsoft.Graph.Models;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Purview.SDK.Client;
+using Microsoft.Purview.SDK.ClientSettings;
+using Microsoft.Purview.SDK.Models.ProcessContent;
+using Microsoft.Purview.SDK.Models.ProtectionScopes;
+using Microsoft.Purview.SDK.Models.Requests;
 
 namespace Azure.Mcp.Tools.Purview.Services;
 
 /// <summary>
 /// Service implementation for Microsoft Purview operations.
 /// </summary>
-public sealed class PurviewService(ITenantService tenantService, ILogger<PurviewService> logger)
+public sealed class PurviewService(ITenantService tenantService)
     : BaseAzureService(tenantService), IPurviewService
 {
-    private readonly ILogger<PurviewService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public async Task<List<PolicyUserScope>?> ComputeProtectionScopesAsync(
+    public async Task<IReadOnlyCollection<PolicyUserScope>?> ComputeProtectionScopesAsync(
         string userId,
         List<string>? activities = null,
         List<string>? policyLocations = null,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        var tokenCredential = await GetCredential(tenantId, cancellationToken);
-        var httpClient = TenantService.GetClient();
-        httpClient.BaseAddress = GetBaseAddress();
-        using var graphClient = new GraphServiceClient(httpClient, tokenCredential);
-
-        var response = await graphClient.Users[userId].DataSecurityAndGovernance.ProtectionScopes.Compute.PostAsComputePostResponseAsync(new()
+        PurviewClientSettings settings = new()
         {
-            Activities = ConvertToUserActivityTypes(activities),
-            Locations = ConvertToPolicyLocations(policyLocations)
-        }, cancellationToken: cancellationToken);
+            GraphServiceBaseUri = GetBaseAddress(),
+            UserAgent = UserAgent,
+            LoggingInjection = builder =>
+            {
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+                builder.SetMinimumLevel(LogLevel.Information);
+            }
+        };
+        var client = new PurviewClient(settings);
 
-        return response?.Value;
+        ProtectionScopesRequest request = new();
+        var convertedActivities = ConvertToUserActivityTypes(activities);
+        if (convertedActivities != null)
+        {
+            request.Activities = (ProtectionScopeActivities)convertedActivities;
+        }
+        var locations = ConvertToPolicyLocations(policyLocations);
+        if (locations != null)
+        {
+            request.Locations = locations!;
+        }
+
+        var tokenCredential = await GetCredential(tenantId, cancellationToken);
+        ClientRequestOptions requestOptions = new(async (context, cancellation) =>
+        {
+            var accessToken = await tokenCredential.GetTokenAsync(new(
+                scopes: context.Scopes.ToArray(),
+                claims: context.Claims,
+                tenantId: context.TenantId,
+                requestUri: context.Authority), cancellation);
+            return accessToken.Token;
+        })
+        {
+
+        };
+
+        var response = await client.SearchUserProtectionScopeAsync(request, tenantId, userId, requestOptions, cancellationToken);
+
+        return response.Scopes;
     }
 
-    private static UserActivityTypes? ConvertToUserActivityTypes(List<string>? activities)
+    private static ProtectionScopeActivities? ConvertToUserActivityTypes(List<string>? activities)
     {
         if (activities == null || activities.Count == 0)
         {
             return null;
         }
 
-        UserActivityTypes result = 0;
+        ProtectionScopeActivities result = 0;
         foreach (var activity in activities)
         {
-            if (Enum.TryParse<UserActivityTypes>(activity, ignoreCase: true, out var parsed))
+            if (Enum.TryParse<ProtectionScopeActivities>(activity, ignoreCase: true, out var parsed))
             {
                 result |= parsed;
             }
@@ -81,9 +111,9 @@ public sealed class PurviewService(ITenantService tenantService, ILogger<Purview
             var location = parts[1].Trim();
             PolicyLocation policyLocation = kind.ToLower() switch
             {
-                "policylocationapplication" => new PolicyLocationApplication { Value = location },
-                "policylocationdomain" => new PolicyLocationDomain { Value = location },
-                "policylocationurl" => new PolicyLocationUrl { Value = location },
+                "policylocationapplication" => new PolicyLocationApplication(location),
+                "policylocationdomain" => new PolicyLocationDomain(location),
+                "policylocationurl" => new PolicyLocationUrl(location),
                 _ => throw new ArgumentException($"Invalid policy location kind: {kind}. Valid kinds are 'policyLocationApplication', 'policyLocationDomain', 'policyLocationUrl' (case-insensitive).")
             };
 
