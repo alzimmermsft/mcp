@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -79,10 +77,7 @@ public class SingleProxyToolLoaderTests
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
+        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList }, new());
     }
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(
@@ -90,14 +85,11 @@ public class SingleProxyToolLoaderTests
         Dictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments ?? []
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? []
+        });
     }
 
     [Fact]

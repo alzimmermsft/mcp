@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003
-#pragma warning disable MCP9005
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -34,23 +32,17 @@ public class RegistryToolLoaderTests
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
+        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList }, new());
     }
 
     private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
     {
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new()
         {
-            Params = new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+            Name = toolName,
+            Arguments = arguments ?? new Dictionary<string, JsonElement>()
+        });
     }
 
     [Fact]

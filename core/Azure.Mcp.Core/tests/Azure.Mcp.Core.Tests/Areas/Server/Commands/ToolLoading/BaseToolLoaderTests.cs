@@ -1,4 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
 #pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -313,10 +312,9 @@ public class BaseToolLoaderTests
         var mockServer = Substitute.For<McpServer>();
         var jsonRpcRequest = new JsonRpcRequest
         {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+            Method = RequestMethods.ToolsCall
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, new() { Name = "test-tool" });
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -341,10 +339,9 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null); // No elicitation support
         var jsonRpcRequest = new JsonRpcRequest
         {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+            Method = RequestMethods.ToolsCall
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, new() { Name = "test-tool" });
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -373,10 +370,9 @@ public class BaseToolLoaderTests
 
         var jsonRpcRequest = new JsonRpcRequest
         {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+            Method = RequestMethods.ToolsCall
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, new() { Name = "test-tool" });
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -406,10 +402,9 @@ public class BaseToolLoaderTests
 
         var jsonRpcRequest = new JsonRpcRequest
         {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+            Method = RequestMethods.ToolsCall
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, new() { Name = "test-tool" });
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -445,10 +440,9 @@ public class BaseToolLoaderTests
 
         var jsonRpcRequest = new JsonRpcRequest
         {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+            Method = RequestMethods.ToolsCall
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, new() { Name = "test-tool" });
         var logger = Substitute.For<ILogger>();
 
         // Act
@@ -489,10 +483,9 @@ public class BaseToolLoaderTests
 
         var jsonRpcRequest = new JsonRpcRequest
         {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
+            Method = RequestMethods.ToolsCall
         };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest, new() { Name = "test-tool" });
         var logger = Substitute.For<ILogger>();
 
         // Act
