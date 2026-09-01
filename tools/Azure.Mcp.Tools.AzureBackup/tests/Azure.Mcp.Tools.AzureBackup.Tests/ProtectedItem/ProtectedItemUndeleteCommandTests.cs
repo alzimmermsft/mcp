@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.ProtectedItem;
 
-public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedItemUndeleteCommand, IAzureBackupService>
+public class ProtectedItemUndeleteCommandTests : SubscriptionCommandUnitTestsBase<ProtectedItemUndeleteCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -31,7 +30,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is("/subscriptions/00000000/resourceGroups/rg-prod/providers/Microsoft.Compute/virtualMachines/my-vm"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Accepted", null, "Soft-deleted protected item restored"));
 
         // Act
@@ -53,7 +52,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Accepted", "job-456", "Item restored successfully"));
 
         // Act
@@ -77,7 +76,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -101,7 +100,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         {
             Service.UndeleteProtectedItemAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Accepted", null, "Restored"));
         }
 
@@ -125,7 +124,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -147,7 +146,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not Found"));
 
         // Act
@@ -168,7 +167,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Conflict"));
 
         // Act
@@ -189,7 +188,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Item not found"));
 
         // Act
@@ -211,7 +210,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is("/subscriptions/00000000/resourceGroups/rg/providers/Microsoft.Compute/disks/my-disk"),
-            Arg.Is("dpp"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("dpp"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Accepted", null, "Soft-deleted backup instance restored"));
 
         // Act
@@ -234,7 +233,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         // Arrange
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid datasource ID format"));
 
         // Act
@@ -270,7 +269,7 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         Service.UndeleteProtectedItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
             Arg.Any<string?>(), Arg.Is("IaasVMContainer;iaasvmcontainerv2;rg;myvm"), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Accepted", null, "Restored"));
 
         // Act
@@ -286,6 +285,6 @@ public class ProtectedItemUndeleteCommandTests : CommandUnitTestsBase<ProtectedI
         await Service.Received(1).UndeleteProtectedItemAsync(
             "v", "rg", "sub", "ds1",
             Arg.Any<string?>(), "IaasVMContainer;iaasvmcontainerv2;rg;myvm", Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 }

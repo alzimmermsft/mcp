@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Incidents;
 
-public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlansListCommand, ISreAgentService>
+public class IncidentsPlansListCommandTests : SubscriptionCommandUnitTestsBase<IncidentsPlansListCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -46,7 +45,6 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -76,7 +74,6 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -97,7 +94,6 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -120,7 +116,6 @@ public class IncidentsPlansListCommandTests : CommandUnitTestsBase<IncidentsPlan
             null,
             "agent1",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 

@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Container;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests.Container;
 
-public class ContainerSchemaInferCommandTests : CommandUnitTestsBase<ContainerSchemaInferCommand, ICosmosService>
+public class ContainerSchemaInferCommandTests : SubscriptionCommandUnitTestsBase<ContainerSchemaInferCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("infer", Command.Name);
@@ -45,7 +44,6 @@ public class ContainerSchemaInferCommandTests : CommandUnitTestsBase<ContainerSc
             Arg.Is("sub"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(schema);
 
@@ -83,7 +81,7 @@ public class ContainerSchemaInferCommandTests : CommandUnitTestsBase<ContainerSc
         Service.GetApproximateSchema(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(),
             Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("boom"));
 
         var response = await ExecuteCommandAsync(

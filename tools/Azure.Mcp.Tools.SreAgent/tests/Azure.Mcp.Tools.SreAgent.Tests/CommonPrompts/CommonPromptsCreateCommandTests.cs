@@ -2,19 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.CommonPrompts;
 
-public class CommonPromptsCreateCommandTests : CommandUnitTestsBase<CommonPromptsCreateCommand, ISreAgentService>
+public class CommonPromptsCreateCommandTests : SubscriptionCommandUnitTestsBase<CommonPromptsCreateCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -41,7 +39,6 @@ public class CommonPromptsCreateCommandTests : CommandUnitTestsBase<CommonPrompt
     [InlineData("--subscription sub --agent myagent --content \"Test content\"", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             Service.GetAgentAsync(
@@ -49,7 +46,6 @@ public class CommonPromptsCreateCommandTests : CommandUnitTestsBase<CommonPrompt
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
             Service.CreateOrUpdateCommonPromptAsync(
@@ -81,7 +77,6 @@ public class CommonPromptsCreateCommandTests : CommandUnitTestsBase<CommonPrompt
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.CreateOrUpdateCommonPromptAsync(
@@ -106,7 +101,6 @@ public class CommonPromptsCreateCommandTests : CommandUnitTestsBase<CommonPrompt
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://myagent.azuresre.ai" });
         Service.CreateOrUpdateCommonPromptAsync(

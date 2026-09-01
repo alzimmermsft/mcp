@@ -2,20 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Policy;
 
-public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand, IAzureBackupService>
+public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyCreateCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -35,7 +34,7 @@ public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand
             Arg.Is<PolicyCreateRequest>(r => r.Policy == "myPolicy" && r.WorkloadType == "AzureIaasVM"),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
         // Act
         var response = await ExecuteCommandAsync(
@@ -60,7 +59,7 @@ public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand
             Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "AzureIaasVM"),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
         // Act
         var response = await ExecuteCommandAsync(
@@ -87,7 +86,7 @@ public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand
                 Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM"),
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
                 Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -204,7 +203,7 @@ public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand
             Arg.Any<PolicyCreateRequest>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
         // Act
         var response = await ExecuteCommandAsync(
@@ -230,7 +229,7 @@ public class PolicyCreateCommandTests : CommandUnitTestsBase<PolicyCreateCommand
             Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM"),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
         // Act
         var response = await ExecuteCommandAsync(

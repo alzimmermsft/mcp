@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 
@@ -25,20 +26,14 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseVirtualDesktopCommand<HostpoolListOptions>
+public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVirtualDesktopService virtualDesktopService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<HostpoolListOptions, HostpoolListCommand.HostPoolListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<HostpoolListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, HostpoolListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             IReadOnlyList<Models.HostPool> hostpools;
@@ -49,7 +44,6 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -57,7 +51,6 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
                 hostpools = await _virtualDesktopService.ListHostpoolsAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 
@@ -74,5 +67,5 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger, IVi
         return context.Response;
     }
 
-    internal record HostPoolListCommandResult(List<Models.HostPool> hostpools);
+    public sealed record HostPoolListCommandResult(List<Models.HostPool> hostpools);
 }

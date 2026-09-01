@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 
 public interface IPostgresService
 {
-    Task<List<string>> ListDatabasesAsync(
+    Task<DatabaseListResult> ListDatabasesAsync(
         string authType,
         string user,
         string? password,
@@ -23,7 +23,7 @@ public interface IPostgresService
         string query,
         CancellationToken cancellationToken);
 
-    Task<List<string>> ListTablesAsync(
+    Task<TableListResult> ListTablesAsync(
         string authType,
         string user,
         string? password,
@@ -52,7 +52,6 @@ public interface IPostgresService
         string user,
         string server,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> GetServerParameterAsync(
@@ -62,7 +61,6 @@ public interface IPostgresService
         string server,
         string param,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> SetServerParameterAsync(
@@ -73,6 +71,5 @@ public interface IPostgresService
         string param,
         string value,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

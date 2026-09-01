@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.Database;
 
-public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, ISqlService>
+public class DatabaseGetCommandTests : SubscriptionCommandUnitTestsBase<DatabaseGetCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -34,7 +33,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
             Arg.Is("testdb"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -50,8 +48,8 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
-        await Service.Received(1).GetDatabaseAsync("server1", "testdb", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await Service.DidNotReceive().ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetDatabaseAsync("server1", "testdb", "rg", "sub", Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -64,7 +62,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabases);
 
@@ -79,8 +76,8 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
-        await Service.Received(1).ListDatabasesAsync("server1", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await Service.DidNotReceive().GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListDatabasesAsync("server1", "rg", "sub", Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -91,7 +88,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -117,7 +113,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -142,7 +137,6 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
@@ -169,10 +163,10 @@ public class DatabaseGetCommandTests : CommandUnitTestsBase<DatabaseGetCommand, 
         if (shouldSucceed)
         {
             Service
-                .ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                .ListDatabasesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(new List<SqlDatabase>());
             Service
-                .GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                .GetDatabaseAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(CreateMockDatabase("db1"));
         }
 

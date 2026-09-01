@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
-using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -17,7 +14,7 @@ using CacheModel = Azure.Mcp.Tools.Redis.Models.Resource;
 
 namespace Azure.Mcp.Tools.Redis.Tests;
 
-public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand, IRedisService>
+public class ResourceListCommandTests : SubscriptionCommandUnitTestsBase<ResourceListCommand, IRedisService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -38,7 +35,6 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
             Service.ListResourcesAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -53,18 +49,15 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     {
         // Arrange
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" }, new() { Name = "cache2" } };
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item => Assert.Equal("cache1", item.Name),
             item => Assert.Equal("cache2", item.Name));
@@ -74,18 +67,14 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoCaches()
     {
         // Arrange
-        Service.ListResourcesAsync("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns([]);
+        Service.ListResourcesAsync("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns([]);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Empty(result.Resources);
     }
 
@@ -94,7 +83,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     {
         // Arrange
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -110,7 +99,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     public async Task ExecuteAsync_ReturnsNotFound_WhenSubscriptionNotFound()
     {
         // Arrange
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Subscription 'sub123' not found"));
 
         // Act
@@ -125,7 +114,7 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     public async Task ExecuteAsync_PreservesStatusCode_WhenRequestFailedException()
     {
         // Arrange
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -147,18 +136,15 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         };
 
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" }, new() { Name = "cache2", AccessPolicyAssignments = expectedAssignments } };
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item => Assert.Equal("cache1", item.Name),
             item =>
@@ -176,18 +162,15 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
     {
         // Arrange
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" } };
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item =>
             {
@@ -224,18 +207,15 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
 
         var expectedCaches = new CacheModel[] { new() { Name = "cache1", Databases = expectedDatabases } };
 
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item =>
             {
@@ -253,31 +233,20 @@ public class ResourceListCommandTests : CommandUnitTestsBase<ResourceListCommand
         // Arrange
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" } };
 
-        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedCaches);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", "sub123");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceListCommandResult);
-
-        Assert.NotNull(result);
         Assert.Collection(result.Resources,
             item =>
             {
                 Assert.Equal("cache1", item.Name);
                 Assert.Null(item.Databases);
             });
-    }
-
-    private static void AssertSuccessResponse(CommandResponse response)
-    {
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
     }
 }

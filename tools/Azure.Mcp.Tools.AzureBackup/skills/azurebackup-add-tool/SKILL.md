@@ -28,7 +28,7 @@ ensuring it passes all validation gates before PR submission.
 
 ### Phase 1: Implementation
 
-Follow [`/servers/Azure.Mcp.Server/docs/new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) as the authoritative guide.
+Follow [`/.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md) as the authoritative guide.
 The Azure Backup toolset lives in `tools/Azure.Mcp.Tools.AzureBackup/`.
 
 #### 1a. Create Option Definitions
@@ -260,12 +260,12 @@ dotnet test tools\Azure.Mcp.Tools.AzureBackup\tests\Azure.Mcp.Tools.AzureBackup.
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-If new technical terms are flagged, add them to `.vscode/cspell.json`.
+If new Azure Backup-specific technical terms are flagged, add them to `tools/Azure.Mcp.Tools.AzureBackup/cspell.yaml`. Add cross-cutting terms used by multiple projects to `.vscode/cspell.json`.
 
 #### 5f. Full Build Verification
 
 ```powershell
-./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+./eng/scripts/Build-Local.ps1 -VerifyNpx
 ```
 
 #### 5g. AOT/Native Build Verification

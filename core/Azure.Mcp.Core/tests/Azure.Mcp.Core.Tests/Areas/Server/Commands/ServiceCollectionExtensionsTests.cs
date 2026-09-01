@@ -47,7 +47,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo
         };
@@ -77,7 +77,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "single"
@@ -103,7 +103,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "namespace"
@@ -131,7 +131,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             // No mode specified - should use default "namespace" mode
@@ -153,7 +153,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             // Define proxy as "single" to prevent CompositeDiscoveryStrategy error
@@ -179,7 +179,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
         };
@@ -207,7 +207,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             ReadOnly = true
@@ -218,14 +218,13 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var registeredOptions = provider.GetService<ServiceStartOptions>();
-        var wrappedOptions = provider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+        var registeredOptions = provider.GetService<ServerRuntimeConfiguration>();
+        var wrappedOptions = provider.GetService<IOptions<ServerRuntimeConfiguration>>()?.Value;
 
         // Verify both registrations point to the same instance
         Assert.NotNull(registeredOptions);
         Assert.NotNull(wrappedOptions);
-        Assert.Same(options, registeredOptions);
-        Assert.Same(options, wrappedOptions);
+        Assert.Same(registeredOptions, wrappedOptions);
         Assert.True(registeredOptions.ReadOnly);
     }
 
@@ -234,7 +233,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             ReadOnly = true
@@ -245,13 +244,13 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var registeredOptions = provider.GetService<ServiceStartOptions>();
+        var registeredOptions = provider.GetService<ServerRuntimeConfiguration>();
 
         Assert.NotNull(registeredOptions);
         Assert.True(registeredOptions.ReadOnly);
 
-        // Verify the option is also available as IOptions<ServiceStartOptions>
-        var optionsMonitor = provider.GetService<IOptions<ServiceStartOptions>>();
+        // Verify the option is also available as IOptions<ServerRuntimeConfiguration>
+        var optionsMonitor = provider.GetService<IOptions<ServerRuntimeConfiguration>>();
         Assert.NotNull(optionsMonitor);
         Assert.True(optionsMonitor.Value.ReadOnly);
     }
@@ -261,7 +260,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Namespace = ["keyvault", "storage"]
@@ -293,7 +292,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Namespace = [serviceArea]
@@ -319,7 +318,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "invalid-mode"
@@ -340,7 +339,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = null
@@ -361,7 +360,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "all"
@@ -387,7 +386,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo
         };
@@ -412,7 +411,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo
         };

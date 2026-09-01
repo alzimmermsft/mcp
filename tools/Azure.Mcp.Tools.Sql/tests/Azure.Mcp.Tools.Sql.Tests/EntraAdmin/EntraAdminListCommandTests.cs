@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.Tests.EntraAdmin;
 
-public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCommand, ISqlService>
+public class EntraAdminListCommandTests : SubscriptionCommandUnitTestsBase<EntraAdminListCommand, ISqlService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -38,7 +37,6 @@ public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCom
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -73,7 +71,6 @@ public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCom
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(administrators);
 
@@ -97,7 +94,6 @@ public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCom
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -121,7 +117,6 @@ public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCom
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -146,7 +141,6 @@ public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCom
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -170,7 +164,6 @@ public class EntraAdminListCommandTests : CommandUnitTestsBase<EntraAdminListCom
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 

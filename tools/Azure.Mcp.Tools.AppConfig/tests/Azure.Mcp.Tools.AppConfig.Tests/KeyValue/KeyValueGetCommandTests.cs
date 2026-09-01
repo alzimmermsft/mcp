@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.KeyValue;
 
-public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, IAppConfigService>
+public class KeyValueGetCommandTests : SubscriptionCommandUnitTestsBase<KeyValueGetCommand, IAppConfigService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsSettingsList_WhenSettingsExist()
@@ -33,7 +32,6 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
           Arg.Any<string?>(),
           Arg.Any<string?>(),
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>(),
           Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
@@ -64,7 +62,6 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
           "key1",
           Arg.Any<string?>(),
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>(),
           Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
@@ -100,7 +97,6 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
           Arg.Any<string?>(),
           "prod",
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>(),
           Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
@@ -139,7 +135,6 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedSetting]);
 
@@ -179,7 +174,6 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedSetting]);
 
@@ -209,7 +203,6 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Setting not found"));
 
@@ -245,7 +238,7 @@ public class KeyValueGetCommandTests : CommandUnitTestsBase<KeyValueGetCommand, 
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "key1",
-            "--key-filter", "keyfilter");
+            "--key-filter", "keyFilter");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

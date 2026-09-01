@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
@@ -51,7 +52,7 @@ public static class OptionBinder
     {
         var instance = (TOptions)CreateInstance(typeof(TOptions));
         List<string> missingOptions = [];
-        List<string> errors = [];
+        List<string> errors = [.. parseResult.Errors.Select(e => e.Message)];
         Dictionary<PropertyInfo, object>? parentInstances = null;
         var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -130,6 +131,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
             {
                 response.Message = cve.Message;
             }
+
             // Include the command validation exception message as it should be safe. Requires custom validators to
             // exclude any sensitive information from their error messages.
             context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);
@@ -233,3 +235,5 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         }
     }
 }
+
+public record ExceptionResult(string Message, string? StackTrace, string Type);

@@ -2,19 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Services;
-using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Redis.Tests;
 
-public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCommand, IRedisService>
+public class ResourceCreateCommandTests : SubscriptionCommandUnitTestsBase<ResourceCreateCommand, IRedisService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -45,7 +43,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
                 Arg.Any<bool?>(),
                 Arg.Any<string[]?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new Resource { Name = "test-redis" });
         }
@@ -80,7 +77,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -93,11 +89,8 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             "--sku", "Balanced_B0");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("test-redis", result.Resource.Name);
         Assert.Equal("AzureManagedRedis", result.Resource.Type);
         Assert.Equal("test-rg", result.Resource.ResourceGroupName);
@@ -116,7 +109,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             false,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -136,7 +128,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .ThrowsAsync(new Exception("Resource group 'test-rg' not found"));
 
@@ -163,7 +154,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -196,7 +186,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
                 modules.Contains("RedisBloom") &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -210,11 +199,8 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             "--modules", "RedisBloom", "RedisJSON");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("test-redis-with-modules", result.Resource.Name);
         Assert.Equal("Creating", result.Resource.Status);
 
@@ -232,7 +218,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
                 modules.Contains("RedisBloom") &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -261,7 +246,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -275,11 +259,8 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             "--access-keys-authentication", "true");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("test-redis-with-keys", result.Resource.Name);
         Assert.Equal("Creating", result.Resource.Status);
 
@@ -293,7 +274,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -322,7 +302,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -336,11 +315,8 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             "--public-network-access", "true");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("test-redis-public", result.Resource.Name);
         Assert.Equal("Creating", result.Resource.Status);
 
@@ -354,7 +330,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -386,7 +361,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
                 modules.Length == 1 &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
@@ -401,11 +375,8 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             "--modules", "RedisJSON");
 
         // Assert
-        AssertSuccessResponse(response);
+        var result = ValidateAndDeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
 
-        var result = DeserializeResponse(response, RedisJsonContext.Default.ResourceCreateCommandResult);
-
-        Assert.NotNull(result);
         Assert.Equal("test-redis-full", result.Resource.Name);
         Assert.Equal("Creating", result.Resource.Status);
 
@@ -422,7 +393,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
                 modules.Length == 1 &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -440,7 +410,6 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
         .ThrowsAsync(new KeyNotFoundException("Resource group 'test-rg' not found in subscription 'sub123'"));
 
@@ -455,13 +424,5 @@ public class ResourceCreateCommandTests : CommandUnitTestsBase<ResourceCreateCom
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-    }
-
-    private static void AssertSuccessResponse(CommandResponse response)
-    {
-        Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("Success", response.Message);
-        Assert.NotNull(response.Results);
     }
 }

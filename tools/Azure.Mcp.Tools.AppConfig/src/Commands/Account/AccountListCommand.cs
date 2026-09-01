@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options.Account;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
 
@@ -27,40 +26,20 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.Account;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService) : SubscriptionCommand<AccountListOptions>()
+public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AccountListOptions, AccountListCommand.AccountListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<AccountListCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AccountListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    protected override AccountListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var accounts = await _appConfigService.GetAppConfigAccounts(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), AppConfigJsonContext.Default.AccountListCommandResult);
@@ -74,5 +53,5 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger, IAppC
         return context.Response;
     }
 
-    internal record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool AreResultsTruncated);
+    public sealed record AccountListCommandResult(List<AppConfigurationAccount> Accounts, bool AreResultsTruncated);
 }

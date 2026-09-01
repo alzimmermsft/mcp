@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.TableType;
 
-public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeListCommand, IMonitorService>
+public sealed class TableTypeListCommandTests : SubscriptionCommandUnitTestsBase<TableTypeListCommand, IMonitorService>
 {
     private const string _knownSubscription = "knownSubscription";
     private const string _knownWorkspace = "knownWorkspace";
@@ -39,7 +38,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(testTableTypes);
         }
@@ -76,7 +74,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedTableTypes);
 
@@ -93,7 +90,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TableTypeListCommandResult);
@@ -115,7 +111,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
             _knownResourceGroup,
             _knownWorkspace,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedTableTypes);
 
@@ -132,7 +127,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
             _knownResourceGroup,
             _knownWorkspace,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -145,7 +139,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -169,7 +162,6 @@ public sealed class TableTypeListCommandTests : CommandUnitTestsBase<TableTypeLi
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

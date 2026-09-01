@@ -2,20 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SignalR.Commands;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.Mcp.Tools.SignalR.Services;
-using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SignalR.Tests.Runtime;
 
-public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, ISignalRService>
+public class RuntimeGetCommandTests : SubscriptionCommandUnitTestsBase<RuntimeGetCommand, ISignalRService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -81,8 +79,6 @@ public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, IS
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<AuthMethod?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(runtimes);
         }
@@ -112,8 +108,6 @@ public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, IS
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AuthMethod?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -135,8 +129,6 @@ public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, IS
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AuthMethod?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -159,8 +151,6 @@ public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, IS
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AuthMethod?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -181,8 +171,6 @@ public class RuntimeGetCommandTests : CommandUnitTestsBase<RuntimeGetCommand, IS
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AuthMethod?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 

@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Governance;
 
-public class GovernanceImmutabilityCommandTests : CommandUnitTestsBase<GovernanceImmutabilityCommand, IAzureBackupService>
+public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBase<GovernanceImmutabilityCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -31,7 +30,7 @@ public class GovernanceImmutabilityCommandTests : CommandUnitTestsBase<Governanc
         // Arrange
         Service.ConfigureImmutabilityAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Immutability configured"));
 
         // Act
@@ -53,7 +52,7 @@ public class GovernanceImmutabilityCommandTests : CommandUnitTestsBase<Governanc
         // Arrange
         Service.ConfigureImmutabilityAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -78,7 +77,7 @@ public class GovernanceImmutabilityCommandTests : CommandUnitTestsBase<Governanc
         {
             Service.ConfigureImmutabilityAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 

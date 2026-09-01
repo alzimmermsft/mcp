@@ -1,20 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
-using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Models.Option;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 
-public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand, IEventHubsService>
+public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<NamespaceGetCommand, IEventHubsService>
 {
+    [Fact]
+    public async Task ExecuteAsync_ListWithoutResourceGroup_CallsServiceWithNullResourceGroup()
+    {
+        // Arrange
+        Service.GetNamespacesAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "test-subscription");
+
+        // Assert
+        Assert.Equal(200, (int)response.Status);
+        await Service.Received(1).GetNamespacesAsync(
+            Arg.Is<string?>(rg => rg == null),
+            Arg.Is("test-subscription"),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("--subscription test-subscription", true)]
     [InlineData("--subscription test-subscription --resource-group test-rg", true)]
@@ -26,7 +46,7 @@ public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains($"{EventHubsOptionDefinitions.NamespaceOption.Name}") && args.Contains($"{OptionDefinitions.Common.ResourceGroup.Name}"))
+            if (args.Contains($"--namespace") && args.Contains($"--resource-group"))
             {
                 // Single namespace request
                 var namespaceDetails = new Models.Namespace(
@@ -52,7 +72,6 @@ public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns(namespaceDetails);
             }
@@ -82,7 +101,6 @@ public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns(namespaces);
             }
@@ -112,7 +130,6 @@ public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource Group 'rg-eventhubs-test' could not be found"));
 
@@ -134,7 +151,6 @@ public class NamespaceGetCommandTests : CommandUnitTestsBase<NamespaceGetCommand
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 

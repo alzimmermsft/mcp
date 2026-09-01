@@ -3,12 +3,11 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,7 +15,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp.Deployment;
 
 [Trait("Command", "DeploymentGet")]
-public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetCommand, IAppServiceService>
+public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<DeploymentGetCommand, IAppServiceService>
 {
     [Theory]
     [InlineData(null)]
@@ -30,7 +29,7 @@ public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetComma
 
         // Set up the mock to return success for any arguments
         Service.GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(expectedDeployments);
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"];
@@ -45,7 +44,7 @@ public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetComma
         // Assert
         // Verify that the mock was called with the expected parameters
         await Service.Received(1).GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId,
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DeploymentGetResult);
 
@@ -75,7 +74,6 @@ public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetComma
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -86,7 +84,7 @@ public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetComma
     {
         // Arrange
         Service.GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"];
@@ -103,6 +101,6 @@ public class DeploymentGetCommandTests : CommandUnitTestsBase<DeploymentGetComma
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId,
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

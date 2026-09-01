@@ -3,19 +3,18 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearchCommand, ICosmosService>
+public class ItemVectorSearchCommandTests : SubscriptionCommandUnitTestsBase<ItemVectorSearchCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("vector-search", Command.Name);
@@ -42,7 +41,7 @@ public class ItemVectorSearchCommandTests : CommandUnitTestsBase<ItemVectorSearc
             Arg.Is<IReadOnlyList<float>>(v => v.Count == 2 && v[0] == 0.5f),
             Arg.Is(3),
             Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(items);
 
         var response = await ExecuteCommandAsync(

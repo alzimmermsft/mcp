@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Security;
 
-public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<SecurityConfigureEncryptionCommand, IAzureBackupService>
+public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTestsBase<SecurityConfigureEncryptionCommand, IAzureBackupService>
 {
     private const string TestKeyVaultUri = "https://kv-security-prod.vault.azure.net/";
     private const string TestKeyName = "backup-cmk";
@@ -40,7 +39,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("SystemAssigned"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -68,7 +67,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("UserAssigned"),
             Arg.Any<string?>(), Arg.Is(TestUserAssignedIdentityId), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -96,7 +95,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("SystemAssigned"),
             Arg.Is(TestKeyVersion), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -121,7 +120,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -146,7 +145,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         // Act
@@ -171,7 +170,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -196,7 +195,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Bad request"));
 
         // Act
@@ -255,7 +254,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(vaultType),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         var response = await ExecuteCommandAsync(
@@ -317,7 +316,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -344,7 +343,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act
@@ -361,7 +360,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("SystemAssigned"),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -375,7 +374,7 @@ public class SecurityConfigureEncryptionCommandTests : CommandUnitTestsBase<Secu
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 

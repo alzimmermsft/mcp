@@ -1,5 +1,47 @@
 # Release History
 
+## 1.4.0 (2026-08-27) (pre-release)
+
+### Changed
+
+- **Breaking:** Tool calls with unknown parameters are now explicitly rejected. [[#3282](https://github.com/microsoft/mcp/pull/3282)]
+- **Breaking:** Renamed the `docs` toolset's `--workload-type` parameter to `--item-type`, aligning it with `core_create-item`'s existing `--item-type` and with official Fabric terminology. The accepted values are almost all Fabric item types (`notebook`, `lakehouse`, `dataPipeline`, `report`, ...); the description now also enumerates the four non-item API areas (`platform`, `admin`, `spark`, `realTimeIntelligence`). [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+- **Breaking:** Renamed the `docs_workloads` tool to `docs_list-item-types` and the `docs_workload-api-spec` tool to `docs_item-api-spec`. [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+- **Breaking:** The `docs_list-item-types` response property changed from `workloads` to `itemTypes`. [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+- **Breaking:** Renamed all `onelake` tools to use kebab-case, matching the `<namespace>_<tool-name>` convention already used by the `core`, `docs`, and `datafactory` namespaces. For example, `onelake_list_workspaces` is now `onelake_list-workspaces` and `onelake_create_shortcut_adls_gen2` is now `onelake_create-shortcut-adls-gen2`. The `onelake_confirm_delete` prompt is now `onelake_confirm-delete`. [[#3325](https://github.com/microsoft/mcp/pull/3325)]
+- Updated Fabric REST API specifications and item definition documentation. [[#3397](https://github.com/microsoft/mcp/pull/3397)]
+
+### Fixed
+
+- Fixed `docs_item-api-spec` error messages referencing a non-existent `list_workloads` command; they now point to the `list-item-types` tool. [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+
+## 1.3.0 (2026-08-10) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed unused parameters from Fabric tools. [[#3097](https://github.com/microsoft/mcp/pull/3097)]
+- **Breaking:** Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+- Updated Fabric REST API specifications and item definition documentation. [[#3234](https://github.com/microsoft/mcp/pull/3234)]
+- Updated `@microsoft/vscode-azext-utils` from ~2 to ~4 (4.1.1) and `@vscode/vsce` from 3.7.1 to 3.9.2. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
+
+## 1.2.0 (2026-07-08)
+
+### Added
+
+- Added 12 new OneLake tools: Data Access Security (list, get, create-or-update, delete roles), Shortcuts (list, get, create-or-update, delete, reset-cache), and Settings (get, modify-diagnostics, modify-immutability-policy) [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Added 9 per-target shortcut creation tools (OneLake, ADLS Gen2, Amazon S3, Azure Blob, GCS, S3-compatible, Dataverse, OneDrive/SharePoint, External Data Share) with flat typed options for better LLM ergonomics. [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Flattened JSON-string options into discrete typed parameters for diagnostics, immutability policy, and data access role commands. [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Added the `core_search-catalog` tool to search the Microsoft Fabric OneLake catalog for items across workspaces by display name, description, or workspace name, with optional filtering by item type. Calls the Catalog Search API (POST /v1/catalog/search). [[#2963](https://github.com/microsoft/mcp/pull/2963)]
+
+### Changed
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3006](https://github.com/microsoft/mcp/pull/3006)]
+
+### Fixed
+
+- Refactored OneLake DFS ListPath methods to follow ADLS Gen2 Path List API specification (directory as query parameter) [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Fixed OneLake diagnostics and immutability settings models to match the Fabric REST API contract. [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+
 ## 1.1.0 (2026-06-15)
 
 ### Added

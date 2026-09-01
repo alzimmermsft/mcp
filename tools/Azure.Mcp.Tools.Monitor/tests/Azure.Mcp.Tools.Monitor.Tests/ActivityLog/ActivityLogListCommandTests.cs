@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.ActivityLog;
 
-public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityLogListCommand, IMonitorService>
+public sealed class ActivityLogListCommandTests : SubscriptionCommandUnitTestsBase<ActivityLogListCommand, IMonitorService>
 {
     private const string _knownSubscription = "knownSubscription";
     private const string _knownResourceName = "myResource";
@@ -52,7 +51,6 @@ public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityL
                 Arg.Any<ActivityLogEventLevel?>(),
                 Arg.Any<int>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(testActivityLogs);
         }
@@ -108,7 +106,6 @@ public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityL
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedActivityLogs);
 
@@ -128,7 +125,6 @@ public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityL
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.ActivityLogListCommandResult);
@@ -153,7 +149,6 @@ public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityL
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -181,7 +176,6 @@ public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityL
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -215,7 +209,6 @@ public sealed class ActivityLogListCommandTests : CommandUnitTestsBase<ActivityL
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(
             [

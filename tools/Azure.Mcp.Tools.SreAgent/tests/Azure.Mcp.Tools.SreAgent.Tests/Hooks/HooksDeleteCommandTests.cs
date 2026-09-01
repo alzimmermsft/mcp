@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Hooks;
 
-public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, ISreAgentService>
+public class HooksDeleteCommandTests : SubscriptionCommandUnitTestsBase<HooksDeleteCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -33,15 +32,14 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
         var optionNames = command.Options.Select(o => o.Name).ToList();
         Assert.Contains("--agent", optionNames);
         Assert.Contains("--name", optionNames);
-        Assert.Contains("--confirm", optionNames);
+        Assert.DoesNotContain("--confirm", optionNames);
     }
 
     [Theory]
-    [InlineData("--subscription sub --agent agent1 --name hook1 --confirm true", true)]
-    [InlineData("--subscription sub --agent agent1 --name hook1", false)]
+    [InlineData("--subscription sub --agent agent1 --name hook1", true)]
+    [InlineData("--subscription sub --agent agent1 --name hook1 --confirm true", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             Service.GetAgentAsync(
@@ -49,7 +47,6 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.DeleteHookAsync(
@@ -80,7 +77,6 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteHookAsync(
@@ -90,7 +86,7 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "hook1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "hook1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var result = ValidateAndDeserializeResponse(response, SreAgentJsonContext.Default.HooksDeleteCommandResult);
@@ -105,7 +101,6 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteHookAsync(
@@ -115,7 +110,7 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "hook1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "hook1");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -129,13 +124,12 @@ public class HooksDeleteCommandTests : CommandUnitTestsBase<HooksDeleteCommand, 
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeleteHookAsync("https://agent1.azuresre.ai", "hook1", null, Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "hook1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--name", "hook1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteHookAsync("https://agent1.azuresre.ai", "hook1", null, Arg.Any<CancellationToken>());

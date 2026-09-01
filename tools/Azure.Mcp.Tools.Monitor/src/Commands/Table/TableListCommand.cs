@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
@@ -24,42 +25,22 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Table;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableListOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TableListOptions, TableListCommand.TableListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<TableListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableListOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MonitorOptionDefinitions.TableType);
-    }
-
-    protected override TableListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TableType = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var tables = await _monitorService.ListTables(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Workspace!,
+                options.ResourceGroup,
+                options.Workspace,
                 options.TableType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tables ?? []), MonitorJsonContext.Default.TableListCommandResult);
@@ -73,5 +54,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IMonitorS
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    public sealed record TableListCommandResult(List<string> Tables);
 }

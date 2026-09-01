@@ -2,20 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Threads;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Threads;
 
-public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsInvestigateYoloCommand, ISreAgentService>
+public class ThreadsInvestigateYoloCommandTests : SubscriptionCommandUnitTestsBase<ThreadsInvestigateYoloCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -43,7 +41,6 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
     [InlineData("--subscription sub --agent test-agent", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             Service.GetAgentAsync(
@@ -51,7 +48,6 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -103,7 +99,6 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -150,7 +145,6 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -175,7 +169,6 @@ public class ThreadsInvestigateYoloCommandTests : CommandUnitTestsBase<ThreadsIn
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 

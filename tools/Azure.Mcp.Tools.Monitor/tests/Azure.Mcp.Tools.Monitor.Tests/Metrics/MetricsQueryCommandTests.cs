@@ -2,21 +2,20 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Metrics;
 
-public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand, IMonitorMetricsService>
+public class MetricsQueryCommandTests : SubscriptionCommandUnitTestsBase<MetricsQueryCommand, IMonitorMetricsService>
 {
     #region Constructor and Properties Tests
 
@@ -91,7 +90,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -124,7 +122,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             "Average", // aggregation
             "dimension eq 'value'", // filter
             null, // tenant
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -145,7 +142,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -170,7 +166,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Is<string?>(t => t == null), // aggregation (not provided)
             Arg.Is<string?>(t => t == null), // filter (not provided)
             Arg.Is<string?>(t => t == null), // tenant
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -198,7 +193,7 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
         if (!shouldBeValid)
         {
             Assert.NotNull(result.Message);
-            Assert.Contains("Invalid format for --metric-names", result.Message);
+            Assert.Contains("Invalid format for '--metric-names'", result.Message);
             Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         }
         else
@@ -253,7 +248,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -287,7 +281,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -320,7 +313,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -351,7 +343,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             "Average",
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -414,7 +405,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
@@ -470,7 +460,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
@@ -550,7 +539,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(results);
 
@@ -603,7 +591,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(resultsWithinLimit);
 
@@ -656,7 +643,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
@@ -698,7 +684,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
@@ -733,7 +718,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
@@ -802,7 +786,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(results);
 
@@ -856,7 +839,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(results);
 
@@ -910,7 +892,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(results);
 
@@ -943,7 +924,6 @@ public class MetricsQueryCommandTests : CommandUnitTestsBase<MetricsQueryCommand
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult((List<MetricResult>)null!));
 

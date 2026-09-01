@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.KeyValue;
 
-public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, IAppConfigService>
+public class KeyValueSetCommandTests : SubscriptionCommandUnitTestsBase<KeyValueSetCommand, IAppConfigService>
 {
     [Fact]
     public async Task ExecuteAsync_SetsKeyValue_WhenValidParametersProvided()
@@ -32,7 +31,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             "my-value",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<string>(),
             Arg.Any<string[]>(),
@@ -62,7 +60,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             "my-value",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<string>(),
             Arg.Any<string[]>(),
@@ -94,7 +91,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             "my-value",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             "application/json",
             Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
@@ -120,7 +116,6 @@ public class KeyValueSetCommandTests : CommandUnitTestsBase<KeyValueSetCommand, 
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),

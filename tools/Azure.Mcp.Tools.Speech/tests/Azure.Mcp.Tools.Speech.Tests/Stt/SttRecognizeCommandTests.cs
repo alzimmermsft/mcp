@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
@@ -12,10 +12,9 @@ using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -24,20 +23,17 @@ namespace Azure.Mcp.Tools.Speech.Tests.Stt;
 
 public class SttRecognizeCommandTests : IDisposable
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly ISpeechService _speechService;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
     private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
     private readonly IRealtimeTtsSynthesizer _realtimeTtsSynthesizer;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly ILogger<SttRecognizeCommand> _logger;
     private readonly ILogger<SpeechService> _speechServiceLogger;
     private readonly SttRecognizeCommand _command;
-    private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownEndpoint = "https://eastus.cognitiveservices.azure.com/";
-    private readonly string _knownSubscription = "sub123";
-    private readonly List<string> _testFilesToCleanup = new();
+    private readonly List<string> _testFilesToCleanup = [];
 
     public SttRecognizeCommandTests()
     {
@@ -45,18 +41,14 @@ public class SttRecognizeCommandTests : IDisposable
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
         _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
-        _tenantService = Substitute.For<ITenantService>();
+        _azureService = Substitute.For<IAzureService>();
         _logger = Substitute.For<ILogger<SttRecognizeCommand>>();
         _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
 
         // Create real SpeechService with mocked dependencies
-        _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
+        _speechService = new SpeechService(_azureService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
-        var collection = new ServiceCollection();
-
-        _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger, _speechService);
-        _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
 
@@ -95,7 +87,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
     }
@@ -118,7 +109,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
     }
@@ -149,31 +139,18 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             "detailed",
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
     }
 
-    private async Task<CommandResponse> ExecuteCommandAsync(string args)
-    {
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        return await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-    }
+    private async Task<CommandResponse> ExecuteCommandAsync(string args) =>
+        await ExecuteCommandAsync(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-    private async Task<CommandResponse> ExecuteCommandAsync(string[] args)
-    {
-        var parseResult = _commandDefinition.Parse(args);
-        return await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-    }
+    private async Task<CommandResponse> ExecuteCommandAsync(params string[] args) =>
+        await ((IBaseCommand)_command).ExecuteAsync(new(), _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
-    private static SttRecognizeCommand.SttRecognizeCommandResult DeserializeResult(CommandResponse response)
-    {
-        return JsonSerializer.Deserialize(
-            JsonSerializer.Serialize(response.Results),
-            SpeechJsonContext.Default.SttRecognizeCommandResult)!;
-    }
-
-
+    private static SttRecognizeCommand.SttRecognizeCommandResult DeserializeResult(CommandResponse response) =>
+        JsonSerializer.Deserialize(JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult)!;
 
     [Fact]
     public void Constructor_WithValidLogger_ShouldCreateInstance()
@@ -198,12 +175,11 @@ public class SttRecognizeCommandTests : IDisposable
     }
 
     [Theory]
-    [InlineData("", false, "Missing Required options: --endpoint, --file")]
-    [InlineData("--subscription sub123", false, "Missing Required options: --endpoint, --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file nonexistent.wav", false, "Audio file not found")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format invalid", false, "Format must be 'simple' or 'detailed'")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --profanity invalid", false, "Profanity filter must be 'masked', 'removed', or 'raw'")]
+    [InlineData("", false, "Missing Required options: --file, --endpoint")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --file")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file nonexistent.wav", false, "Audio file not found")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format invalid", false, "Format must be 'simple' or 'detailed'")]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --profanity invalid", false, "Profanity filter must be 'masked', 'removed', or 'raw'")]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
     {
         // Create a test file if needed
@@ -226,14 +202,14 @@ public class SttRecognizeCommandTests : IDisposable
     }
 
     [Theory]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav", RecognizerType.Fast)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format detailed", RecognizerType.Fast)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language en-US --format detailed", RecognizerType.Realtime)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language fr-FR", RecognizerType.Fast)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language es-ES", RecognizerType.Fast)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language af-ZA", RecognizerType.Realtime)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language am-ET", RecognizerType.Realtime)]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language as-IN", RecognizerType.Realtime)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav", RecognizerType.Fast)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format detailed", RecognizerType.Fast)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language en-US --format detailed", RecognizerType.Realtime)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language fr-FR", RecognizerType.Fast)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language es-ES", RecognizerType.Fast)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language af-ZA", RecognizerType.Realtime)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language am-ET", RecognizerType.Realtime)]
+    [InlineData("--endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language as-IN", RecognizerType.Realtime)]
     public async Task ExecuteAsync_DifferentInput_ShouldUseDifferentRecognizer(string args, RecognizerType expectedRecognizer)
     {
         // Arrange
@@ -265,7 +241,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             await _realtimeTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
@@ -275,7 +250,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             Assert.NotNull(result.Result.FastTranscriptionResult);
@@ -290,7 +264,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
@@ -299,7 +272,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             Assert.NotNull(result.Result.RealtimeContinuousResult);
@@ -317,8 +289,7 @@ public class SttRecognizeCommandTests : IDisposable
         SetupRealtimeTranscriptionMock(expectedText);
 
         // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple");
         var result = DeserializeResult(response);
 
         // Assert
@@ -344,7 +315,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -352,8 +322,7 @@ public class SttRecognizeCommandTests : IDisposable
         SetupRealtimeTranscriptionMock("Hello world");
 
         // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile}");
 
         // Assert
         // 1. Fast recognizer was called and failed because of UnauthorizedAccessException
@@ -365,7 +334,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         // 2. Realtime recognizer was called as a fallback
@@ -378,7 +346,6 @@ public class SttRecognizeCommandTests : IDisposable
            Arg.Any<string[]>(),
            Arg.Any<string>(),
            Arg.Any<string>(),
-           Arg.Any<RetryPolicyOptions>(),
            Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -399,13 +366,11 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple");
 
         // Assert
         // 1. Fast recognizer was not called
@@ -417,7 +382,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         // 2. Realtime recognizer was called and failed
@@ -430,7 +394,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
@@ -444,8 +407,7 @@ public class SttRecognizeCommandTests : IDisposable
         var testFile = await CreateTestFileAsync("test-audio.wav");
 
         // Act - Use an invalid endpoint that's not Azure AI Services
-        var args = $"--subscription {_knownSubscription} --endpoint https://example.com --file {testFile}";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint https://example.com --file {testFile}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -460,7 +422,7 @@ public class SttRecognizeCommandTests : IDisposable
         SetupRealtimeTranscriptionMock("Test result");
 
         // Act - Use a valid Azure AI endpoint
-        var args = $"--subscription {_knownSubscription} --endpoint https://myservice.cognitiveservices.azure.com --file {testFile} --language en-US --format simple";
+        var args = $"--endpoint https://myservice.cognitiveservices.azure.com --file {testFile} --language en-US --format simple";
         var response = await ExecuteCommandAsync(args);
 
         // Assert
@@ -475,8 +437,7 @@ public class SttRecognizeCommandTests : IDisposable
         SetupRealtimeTranscriptionDetailedMock("Hello world");
 
         // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format detailed";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --language en-US --format detailed");
         var result = DeserializeResult(response);
 
         // Assert
@@ -505,8 +466,7 @@ public class SttRecognizeCommandTests : IDisposable
         SetupFastTranscriptionMock("Hello world");
 
         // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --profanity {profanityOption}";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --profanity {profanityOption}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -518,7 +478,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             profanityOption,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -544,14 +503,12 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
         // Act - Use a different approach to handle quoted arguments
         var args = new string[]
         {
-            "--subscription", _knownSubscription,
             "--endpoint", _knownEndpoint,
             "--file", testFile,
             "--phrases", "Azure",
@@ -579,7 +536,6 @@ public class SttRecognizeCommandTests : IDisposable
                 phrases.Contains("Azure") &&
                 phrases.Contains("cognitive services")),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -595,8 +551,7 @@ public class SttRecognizeCommandTests : IDisposable
         SetupFastTranscriptionMock("Azure cognitive services");
 
         // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language {language}";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --language {language}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -608,32 +563,6 @@ public class SttRecognizeCommandTests : IDisposable
             language,
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithRetryPolicy_ShouldPassToService()
-    {
-        // Arrange
-        var testFile = await CreateTestFileAsync("test-audio-retry.wav");
-        SetupFastTranscriptionMock("Hello with retry");
-
-        // Act
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --retry-max-retries 5";
-        var response = await ExecuteCommandAsync(args);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-
-        // Verify the service was called with retry policy
-        await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5),
             Arg.Any<CancellationToken>());
     }
 
@@ -664,16 +593,13 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exceptionToThrow);
 
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple");
 
             // Assert
             Assert.Equal(expectedStatus, response.Status);
@@ -714,23 +640,19 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
 
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple");
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            var result = DeserializeResult(response);
             Assert.NotNull(result);
             Assert.NotNull(result.Result.RealtimeContinuousResult);
             Assert.Equal("", result.Result.RealtimeContinuousResult.FullText);
@@ -761,9 +683,7 @@ public class SttRecognizeCommandTests : IDisposable
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile}");
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -802,7 +722,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -811,13 +730,11 @@ public class SttRecognizeCommandTests : IDisposable
             // Act - Test semicolon-separated phrases in a single argument
             var args = new string[]
             {
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--file", testFile,
                 "--phrases", "Azure; cognitive services"
             };
-            var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(args);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -867,7 +784,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -876,13 +792,11 @@ public class SttRecognizeCommandTests : IDisposable
             // Act - Test comma-separated phrases in a single argument
             var args = new string[]
             {
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--file", testFile,
                 "--phrases", "Azure, cognitive services"
             };
-            var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(args);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -929,7 +843,6 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
@@ -938,14 +851,12 @@ public class SttRecognizeCommandTests : IDisposable
             // Act - Test combination of multiple arguments and comma-separated phrases
             var args = new string[]
             {
-                "--subscription", _knownSubscription,
                 "--endpoint", _knownEndpoint,
                 "--file", testFile,
                 "--phrases", "Azure, cognitive services",  // Comma-separated in first argument
                 "--phrases", "machine learning"            // Single phrase in second argument
             };
-            var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync(args);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -971,7 +882,6 @@ public class SttRecognizeCommandTests : IDisposable
                     phrases.Contains("cognitive services") &&
                     phrases.Contains("machine learning")),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                     Arg.Any<CancellationToken>());
         }
         finally
@@ -1001,16 +911,13 @@ public class SttRecognizeCommandTests : IDisposable
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {fileName}");
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            var result = DeserializeResult(response);
             Assert.NotNull(result);
             Assert.NotNull(result.Result.FastTranscriptionResult);
             Assert.Equal("Hello world", result.Result.FastTranscriptionResult.CombinedPhrases[0].Text);
@@ -1022,7 +929,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
         }
         finally
@@ -1064,23 +970,19 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
 
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName} --language en-US --format simple";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {fileName} --language en-US --format simple");
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            var result = DeserializeResult(response);
             Assert.NotNull(result);
             Assert.NotNull(result.Result.RealtimeContinuousResult);
             Assert.Equal("Hello world", result.Result.RealtimeContinuousResult.FullText);
@@ -1093,7 +995,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
         }
         finally
@@ -1118,9 +1019,7 @@ public class SttRecognizeCommandTests : IDisposable
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {fileName}");
 
             // Assert - The command should return validation error for invalid file extensions
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -1134,7 +1033,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
 
             await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
@@ -1143,7 +1041,6 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
         }
         finally
@@ -1170,16 +1067,13 @@ public class SttRecognizeCommandTests : IDisposable
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {largeFileName}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+            var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {largeFileName}");
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            var result = DeserializeResult(response);
             Assert.NotNull(result);
             Assert.NotNull(result.Result.FastTranscriptionResult);
             Assert.Equal("Large file processed", result.Result.FastTranscriptionResult.CombinedPhrases[0].Text);
@@ -1199,8 +1093,7 @@ public class SttRecognizeCommandTests : IDisposable
     [InlineData("//server/share/audio.wav", "UNC")]
     public async Task ExecuteAsync_WithUncPath_ShouldRejectPath(string filePath, string expectedErrorFragment)
     {
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {filePath}";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {filePath}");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains(expectedErrorFragment, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -1211,8 +1104,7 @@ public class SttRecognizeCommandTests : IDisposable
     {
         // A traversal path to a nonexistent file should fail with "file not found" after canonicalization,
         // rather than being passed through unchecked.
-        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file ../../../etc/passwd.wav";
-        var response = await ExecuteCommandAsync(args);
+        var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file ../../../etc/passwd.wav");
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("Audio file not found", response.Message, StringComparison.OrdinalIgnoreCase);

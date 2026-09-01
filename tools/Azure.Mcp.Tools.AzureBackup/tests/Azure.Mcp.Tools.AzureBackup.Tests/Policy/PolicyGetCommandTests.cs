@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Policy;
 
-public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzureBackupService>
+public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -43,7 +42,6 @@ public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzu
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedPolicies);
 
@@ -76,7 +74,6 @@ public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzu
             Arg.Is(policyName),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new BackupPolicyInfo("id1", policyName, "rsv", ["AzureIaasVM"], 5, null, null, null));
 
@@ -108,7 +105,6 @@ public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzu
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -133,7 +129,7 @@ public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzu
         var resourceGroup = "myRg";
 
         Service.ListPoliciesAsync(
-            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -157,7 +153,7 @@ public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzu
         var policyName = "nonexistent";
 
         Service.GetPolicyAsync(
-            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Is(policyName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Is(policyName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Policy not found"));
 
         // Act
@@ -181,11 +177,11 @@ public class PolicyGetCommandTests : CommandUnitTestsBase<PolicyGetCommand, IAzu
         if (shouldSucceed)
         {
             Service.ListPoliciesAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetPolicyAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Is("p"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Is("p"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new BackupPolicyInfo("id1", "p", "rsv", ["VM"], 1, null, null, null));
         }
 

@@ -38,6 +38,13 @@ jobs:
       ExportAsOutputVariable: true
 
   - pwsh: |
+      Write-Host "##vso[task.setvariable variable=GH_TOKEN;issecret=true;isOutput=true]$env:GH_TOKEN"
+    name: ExportGitHubTokenForMcpb
+    displayName: "Export GitHub token for MCPB publishing"
+    env:
+      GH_TOKEN: $(GH_TOKEN)
+
+  - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
       $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
 
@@ -51,7 +58,15 @@ jobs:
       $version = $server.version
       $tag = $server.releaseTag
 
-      gh release create $tag --title "$serverName $version"
+      if ($serverName -eq 'Azure.Mcp.Server') {
+        $templatePath = "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/release-notes-template.md"
+        $notes = (Get-Content -Raw -Path $templatePath).Replace('[Version]', $version)
+        $notesFile = [System.IO.Path]::GetTempFileName()
+        Set-Content -Path $notesFile -Value $notes -Encoding UTF8
+        gh release create $tag --title "$serverName $version" --notes-file $notesFile
+      } else {
+        gh release create $tag --title "$serverName $version"
+      }
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:

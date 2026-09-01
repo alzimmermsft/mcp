@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Metrics;
 
-public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefinitionsCommand, IMonitorMetricsService>
+public class MetricsDefinitionsCommandTests : SubscriptionCommandUnitTestsBase<MetricsDefinitionsCommand, IMonitorMetricsService>
 {
     #region Constructor and Command Setup Tests
 
@@ -76,7 +75,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(
                 [
@@ -138,7 +136,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             "Microsoft.Storage/storageAccounts",
             null,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -162,7 +159,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             "Microsoft.Storage/storageAccounts",
             null,
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -178,7 +174,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             "cpu",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(
             [
@@ -210,7 +205,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             "cpu",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -237,7 +231,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             "Microsoft.Storage/storageAccounts",
             "memory",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -263,7 +256,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             "Microsoft.Storage/storageAccounts",
             "memory",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -283,7 +275,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -309,7 +300,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
@@ -369,7 +359,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
@@ -394,7 +383,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -418,7 +406,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<List<MetricDefinition>>(null!));
 
@@ -448,7 +435,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
@@ -462,7 +448,7 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
         Assert.Contains("Results truncated to 10 of 15", response.Message);
         Assert.Contains("metric definitions", response.Message);
         // Verify service receives all data but command applies limit internally
-        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -479,7 +465,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
@@ -493,7 +478,7 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
         Assert.Contains("Results truncated to 5 of 20", response.Message);
         Assert.Contains("metric definitions", response.Message);
         // Verify service is called correctly
-        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -510,7 +495,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
@@ -524,7 +508,7 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
         Assert.Contains("Results truncated to 8 of 25", response.Message);
         Assert.Contains("Use --search-string to filter results", response.Message);
         // Verify the service was called
-        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -541,7 +525,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(metricDefinitions);
 
@@ -554,7 +537,7 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
         // Verify that all results are returned without truncation
         Assert.Equal("All 3 metric definitions returned.", response.Message);
         // Verify the service was called
-        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListMetricDefinitionsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -584,7 +567,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             "Microsoft.Compute/virtualMachines",
             "performance",
             "test-tenant",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -610,7 +592,6 @@ public class MetricsDefinitionsCommandTests : CommandUnitTestsBase<MetricsDefini
             "Microsoft.Compute/virtualMachines",
             "performance",
             "test-tenant",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 

@@ -2,20 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Agents;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Agents;
 
-public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISreAgentService>
+public class AgentsGetCommandTests : SubscriptionCommandUnitTestsBase<AgentsGetCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -41,10 +39,9 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
-            Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "myagent", Endpoint = "https://test.azuresre.ai" });
         }
 
@@ -64,7 +61,7 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     public async Task ExecuteAsync_DeserializationValidation()
     {
         var testAgent = new SreAgentResource { Name = "myagent", Endpoint = "https://test.azuresre.ai", Location = "eastus2" };
-        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(testAgent);
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent");
@@ -78,7 +75,7 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent");
@@ -90,7 +87,7 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
     [Fact]
     public async Task BindOptions_BindsOptionsCorrectly()
     {
-        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "myagent" });
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "myagent");
@@ -101,7 +98,6 @@ public class AgentsGetCommandTests : CommandUnitTestsBase<AgentsGetCommand, ISre
             Arg.Any<string?>(),
             "myagent",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

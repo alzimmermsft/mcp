@@ -3,19 +3,18 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.Account;
 
-public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, IAppConfigService>
+public class AccountListCommandTests : SubscriptionCommandUnitTestsBase<AccountListCommand, IAppConfigService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsAccounts_WhenAccountsExist()
@@ -30,7 +29,6 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
             "sub123",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -53,7 +51,6 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
 
@@ -70,7 +67,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
     {
         // Arrange
-        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         // Act
@@ -96,7 +93,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
         // Arrange
-        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         // Act
@@ -112,7 +109,7 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
     {
         // Arrange
         const string resourceGroup = "test-rg";
-        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<AppConfigurationAccount>([], false));
 
         // Act
@@ -120,6 +117,6 @@ public class AccountListCommandTests : CommandUnitTestsBase<AccountListCommand, 
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetAppConfigAccounts(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

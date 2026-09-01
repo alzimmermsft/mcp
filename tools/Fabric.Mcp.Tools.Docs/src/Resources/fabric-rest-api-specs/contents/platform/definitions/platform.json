@@ -57,10 +57,10 @@
           "readOnly": true
         },
         "apiEndpoint": {
-            "description": "HTTP URL that represents the API endpoint specific to the workspace. This endpoint value is returned when the user enables preferWorkspaceSpecificEndpoints. It allows for API access over private links.",
-            "type": "string",
-            "format": "uri",
-            "readOnly": true
+          "description": "HTTP URL that represents the API endpoint specific to the workspace. This endpoint value is returned when the user enables preferWorkspaceSpecificEndpoints. It allows for API access over private links.",
+          "type": "string",
+          "format": "uri",
+          "readOnly": true
         },
         "domainId": {
           "description": "The ID of the domain the workspace is assigned to.",
@@ -76,9 +76,13 @@
                   "$ref": "../../common/definitions.json#/definitions/WorkspaceAppliedTag"
           },
           "readOnly": true
+        },
+        "capacityRegion": {
+          "description": "The region of the capacity associated with this workspace.",
+          "$ref": "#/definitions/CapacityRegion",
+          "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "WorkspaceInfo": {
       "description": "A workspace object.",
@@ -100,18 +104,12 @@
           "$ref": "#/definitions/WorkspaceIdentity",
           "readOnly": true
         },
-        "capacityRegion": {
-          "description": "The region of the capacity associated with this workspace.",
-          "$ref": "#/definitions/CapacityRegion",
-          "readOnly": true
-        },
         "oneLakeEndpoints": {
           "description": "The OneLake API endpoints associated with this workspace.",
           "$ref": "#/definitions/OneLakeEndpoints",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "CapacityRegion": {
       "type": "string",
@@ -580,8 +578,7 @@
           "$ref": "#/definitions/CapacityState",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "CapacityState": {
       "type": "string",
@@ -635,8 +632,7 @@
             "description": "Capacity assignment operation is currently running and has not yet completed."
           }
         ]
-      },
-      "readOnly": true
+      }
     },
     "WorkspaceIdentity": {
       "type": "object",
@@ -655,8 +651,7 @@
           "format": "uuid",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "AssignWorkspaceToDomainRequest": {
       "type": "object",
@@ -762,8 +757,7 @@
                     "$ref": "#/definitions/ImportItemDefinitionsDetails"
                 }
             }
-        },
-        "readOnly": true
+        }
     },
     "ItemDefinitionIndexEntry" : {
         "description": "An entry in the item definitions index.",
@@ -850,8 +844,7 @@
                 "$ref": "#/definitions/ImportItemDefinitionOperationStatus",
                 "readOnly": true
             }
-        },
-        "readOnly": true
+        }
     },
     "ItemDefinitionOperationType": {
         "type": "string",
@@ -1969,82 +1962,6 @@
         }
       }
     },
-    "ItemJobParameterType": {
-        "description": "A string that represents the parameter's type. Additional types may be added over time.",
-        "type": "string",
-        "enum": [
-            "VariableReference",
-            "Integer",
-            "Number",
-            "Text",
-            "Boolean",
-            "DateTime",
-            "Guid",
-            "Automatic"
-        ],
-        "x-ms-enum": {
-            "name": "ItemJobParameterType",
-            "modelAsString": true,
-            "values": [
-                {
-                    "value": "VariableReference",
-                    "description": "The type of parameter is a variable reference."
-                },
-                {
-                    "value": "Integer",
-                    "description": "The type of parameter is an integer."
-                },
-                {
-                    "value": "Number",
-                    "description": "The type of parameter is a number, it accepts both integer and float values."
-                },
-                {
-                    "value": "Text",
-                    "description": "The type of parameter is a text."
-                },
-                {
-                    "value": "Boolean",
-                    "description": "The type of parameter is a boolean."
-                },
-                {
-                    "value": "DateTime",
-                    "description": "The type of parameter is a datetime in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
-                },
-                {
-                    "value": "Guid",
-                    "description": "The parameter type is a string representation of a GUID, using 00000000-0000-0000-0000-000000000000 format. See https://learn.microsoft.com/dotnet/api/system.guid.tostring for formatting details, and please use the default format: \"D\"."
-                },
-                {
-                    "value": "Automatic",
-                    "description": "The parameter type is automatically determined. Note: this type may not be supported for all item job types."
-                }
-            ]
-        }
-    },
-    "Parameter": {
-        "description": "An item job parameter.",
-        "type": "object",
-        "required": [
-            "name",
-            "type",
-            "value"
-        ],
-        "properties": {
-            "name": {
-                "description": "The parameter name, specified by the caller, must be unique (case-insensitive check) and no longer than 256 characters.",
-                "type": "string"
-            },
-            "type": {
-                "description": "The parameter type.",
-                "type": "string",
-                "$ref": "#/definitions/ItemJobParameterType"
-            },
-            "value": {
-                "description": "The parameter value based on the parameter type.",
-                "type": "object"
-            }
-        }
-    },
     "RunOnDemandItemJobRequest": {
       "description": "Run on demand item job instance payload",
       "properties": {
@@ -2056,7 +1973,7 @@
             "description": "The parameter list for an on-demand job. These are per-run, user-defined inputs that tailor this invocation. Note: This property is not broadly supported. If the API returns an error with errorCode `FeatureNotAvailable` and errorMessage `Parameter is not allowed for this item type or this item job type`, the `parameters` property is not supported for the specified item type or item job type.",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/Parameter"
+                "$ref": "../../common/job_scheduling.json#/definitions/Parameter"
             }
         }
       }
@@ -2300,40 +2217,6 @@
         }
       }
     },
-    "ItemJobParameter": {
-      "description": "Parameter details.",
-      "type": "object",
-      "required": [
-        "parameterName",
-        "type",
-        "value"
-      ],
-      "properties": {
-        "parameterName": {
-          "description": "Name of the parameter.",
-          "type": "string"
-        },
-        "type": {
-          "description": "The parameter type. Additional parameter types may be added over time.",
-          "type": "string",
-          "enum": [ "Automatic" ],
-          "x-ms-enum": {
-            "name": "Type",
-            "modelAsString": true,
-            "values": [
-              {
-                "value": "Automatic",
-                "description": "Value must be Automatic"
-              }
-            ]
-          }
-        },
-        "value": {
-          "description": "The value of the parameter to override during execution.",
-          "type": "object"
-        }
-      }
-    },
     "Folders": {
       "type": "object",
       "properties": {
@@ -2562,6 +2445,78 @@
           "readOnly": false
         }
       }
+    },
+    "RecoverableItem": {
+      "description": "Recoverable item.",
+      "type": "object",
+      "required": [ "id", "type", "retentionExpirationDateTime" ],
+      "properties": {
+        "id": {
+          "description": "The recoverable item ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The recoverable item display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The recoverable item description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "type": {
+          "description": "The recoverable item type.",
+          "$ref": "../../common/definitions.json#/definitions/ItemType",
+          "readOnly": false
+        },
+        "workspaceId": {
+          "description": "The workspace ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "parentItemId": {
+          "description": "The parent item ID of the recoverable item.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "retentionExpirationDateTime": {
+          "description": "The UTC retention expiration timestamp for the recoverable item, in ISO 8601 format (for example, '2025-12-31T23:59:59.999Z').",
+          "type": "string",
+          "readOnly": true
+        },
+        "tags": {
+          "description": "List of applied tags.",
+          "type": "array",
+          "items": {
+            "$ref": "../../common/definitions.json#/definitions/ItemTag"
+
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "RecoverableItems": {
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of recoverable items.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecoverableItem"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
     },
     "ImmutabilityPolicyRequest": {
       "description": "Immutability policy request object.",

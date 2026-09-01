@@ -3,18 +3,17 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Authorization.Tests;
 
-public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmentListCommand, IAuthorizationService>
+public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<RoleAssignmentListCommand, IAuthorizationService>
 {
     [Fact]
     public async Task ExecuteAsync_ReturnsRoleAssignments_WhenRoleAssignmentsExist()
@@ -53,7 +52,6 @@ public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmen
             Arg.Is(subscriptionId),
             Arg.Is(scope),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRoleAssignments);
 
@@ -72,7 +70,7 @@ public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmen
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
-        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
             .Returns(new ResourceQueryResults<RoleAssignment>([], false));
 
         // Act
@@ -92,7 +90,7 @@ public class RoleAssignmentListCommandTests : CommandUnitTestsBase<RoleAssignmen
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
 
-        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
             .ThrowsAsync(new Exception(expectedError));
 
         // Act

@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Hooks;
 
-public class HooksListCommandTests : CommandUnitTestsBase<HooksListCommand, ISreAgentService>
+public class HooksListCommandTests : SubscriptionCommandUnitTestsBase<HooksListCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -40,7 +39,6 @@ public class HooksListCommandTests : CommandUnitTestsBase<HooksListCommand, ISre
     [InlineData("--subscription sub", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             Service.GetAgentAsync(
@@ -48,7 +46,6 @@ public class HooksListCommandTests : CommandUnitTestsBase<HooksListCommand, ISre
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.ListHooksAsync(
@@ -78,7 +75,6 @@ public class HooksListCommandTests : CommandUnitTestsBase<HooksListCommand, ISre
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ListHooksAsync(
@@ -102,7 +98,6 @@ public class HooksListCommandTests : CommandUnitTestsBase<HooksListCommand, ISre
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ListHooksAsync(
@@ -125,7 +120,6 @@ public class HooksListCommandTests : CommandUnitTestsBase<HooksListCommand, ISre
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ListHooksAsync("https://agent1.azuresre.ai", null, Arg.Any<CancellationToken>())

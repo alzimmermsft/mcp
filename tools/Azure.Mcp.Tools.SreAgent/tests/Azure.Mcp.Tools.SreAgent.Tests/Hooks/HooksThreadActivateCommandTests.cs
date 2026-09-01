@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Hooks;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests.Hooks;
 
-public class HooksThreadActivateCommandTests : CommandUnitTestsBase<HooksThreadActivateCommand, ISreAgentService>
+public class HooksThreadActivateCommandTests : SubscriptionCommandUnitTestsBase<HooksThreadActivateCommand, ISreAgentService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -42,7 +41,6 @@ public class HooksThreadActivateCommandTests : CommandUnitTestsBase<HooksThreadA
     [InlineData("--subscription sub --agent agent1 --thread-id thread1", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        TestEnvironment.ClearAzureSubscriptionId();
         if (shouldSucceed)
         {
             Service.GetAgentAsync(
@@ -50,7 +48,6 @@ public class HooksThreadActivateCommandTests : CommandUnitTestsBase<HooksThreadA
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.ActivateThreadHookAsync(
@@ -82,7 +79,6 @@ public class HooksThreadActivateCommandTests : CommandUnitTestsBase<HooksThreadA
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ActivateThreadHookAsync(
@@ -108,7 +104,6 @@ public class HooksThreadActivateCommandTests : CommandUnitTestsBase<HooksThreadA
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ActivateThreadHookAsync(
@@ -133,7 +128,6 @@ public class HooksThreadActivateCommandTests : CommandUnitTestsBase<HooksThreadA
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.ActivateThreadHookAsync("https://agent1.azuresre.ai", "thread1", "hook1", null, Arg.Any<CancellationToken>())

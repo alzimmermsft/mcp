@@ -2,18 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Tests.ServiceHealthEvents;
 
-public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceHealthEventsListCommand, IResourceHealthService>
+public class ServiceHealthEventsListCommandTests : SubscriptionCommandUnitTestsBase<ServiceHealthEventsListCommand, IResourceHealthService>
 {
     [Theory]
     [InlineData("", false)]
@@ -26,14 +24,6 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
     [InlineData("--subscription sub123 --filter startTime ge 2023-01-01", true)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
-        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
-        // For the empty-args (missing subscription) cases, skip when a CLI
-        // profile default is present so we only assert when validation actually fails.
-        if (!shouldSucceed && string.IsNullOrWhiteSpace(args))
-        {
-            TestEnvironment.SkipIfDefaultSubscriptionConfigured();
-        }
-
         // Arrange
         if (shouldSucceed)
         {
@@ -47,7 +37,6 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -91,7 +80,6 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -118,7 +106,6 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(expectedError));
 
@@ -148,7 +135,6 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ResourceHealthRequestFailedException(HttpStatusCode.Conflict, errorCode, errorMessage));
 
@@ -174,7 +160,6 @@ public class ServiceHealthEventsListCommandTests : CommandUnitTestsBase<ServiceH
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException($"Could not find subscription with name {subscription}", "subscriptionName"));
 

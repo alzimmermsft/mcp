@@ -3,18 +3,17 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.Tests.Item;
 
-public class ItemGetCommandTests : CommandUnitTestsBase<ItemGetCommand, ICosmosService>
+public class ItemGetCommandTests : SubscriptionCommandUnitTestsBase<ItemGetCommand, ICosmosService>
 {
     [Fact]
     public void Name_IsCorrect() => Assert.Equal("get", Command.Name);
@@ -28,7 +27,7 @@ public class ItemGetCommandTests : CommandUnitTestsBase<ItemGetCommand, ICosmosS
             Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"), Arg.Is("abc"),
             Arg.Is("pk1"),
             Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(item);
 
         var response = await ExecuteCommandAsync(
@@ -51,7 +50,7 @@ public class ItemGetCommandTests : CommandUnitTestsBase<ItemGetCommand, ICosmosS
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns((JsonElement?)null);
 
         var response = await ExecuteCommandAsync(

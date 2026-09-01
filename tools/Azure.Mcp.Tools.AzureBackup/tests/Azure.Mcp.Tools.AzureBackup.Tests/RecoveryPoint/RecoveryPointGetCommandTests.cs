@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.RecoveryPoint;
 
-public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGetCommand, IAzureBackupService>
+public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<RecoveryPointGetCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -46,7 +45,6 @@ public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGe
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedPoints);
 
@@ -83,7 +81,6 @@ public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGe
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new RecoveryPointInfo("rp1", rpId, "rsv", DateTimeOffset.UtcNow.AddDays(-1), "Full"));
 
@@ -107,7 +104,7 @@ public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGe
     {
         // Arrange
         Service.ListRecoveryPointsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -128,7 +125,7 @@ public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGe
     {
         // Arrange
         Service.ListRecoveryPointsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -148,7 +145,7 @@ public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGe
     {
         // Arrange
         Service.GetRecoveryPointAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Recovery point not found"));
 
         // Act
@@ -173,11 +170,11 @@ public class RecoveryPointGetCommandTests : CommandUnitTestsBase<RecoveryPointGe
         if (shouldSucceed)
         {
             Service.ListRecoveryPointsAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetRecoveryPointAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("rp1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("rp1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new RecoveryPointInfo("rp1", "rp1", "rsv", DateTimeOffset.UtcNow, "Full"));
         }
 

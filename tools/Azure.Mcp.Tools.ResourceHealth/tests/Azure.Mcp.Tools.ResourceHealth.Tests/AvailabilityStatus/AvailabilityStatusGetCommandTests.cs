@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -14,7 +12,7 @@ using AvailabilityStatusModel = Azure.Mcp.Tools.ResourceHealth.Models.Availabili
 
 namespace Azure.Mcp.Tools.ResourceHealth.Tests.AvailabilityStatus;
 
-public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<AvailabilityStatusGetCommand, IResourceHealthService>
+public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBase<AvailabilityStatusGetCommand, IResourceHealthService>
 {
     #region Get (Single Resource) Tests
 
@@ -31,7 +29,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
             DetailedStatus = "Virtual machine is running normally"
         };
 
-        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
             .Returns(expectedStatus);
 
         var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
@@ -52,7 +50,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
@@ -69,7 +67,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Invalid Azure resource ID. Provide a resource ID in the format /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/<provider>/<type>/<name>. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
             .ThrowsAsync(new FormatException("Invalid resource ID format."));
 
         var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
@@ -89,7 +87,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var errorMessage = "Resource type is not supported.";
         var expectedError = $"Azure Resource Health could not process availability status for resource type '{resourceType}'. Error code: {errorCode}. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
             .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, resourceType, errorCode, errorMessage));
 
         var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", subscriptionId);
@@ -125,7 +123,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
             }
         };
 
-        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
         var response = await ExecuteCommandAsync("--subscription", subscriptionId);
@@ -154,7 +152,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
             }
         };
 
-        Service.ListAvailabilityStatusesAsync(subscriptionId, resourceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, resourceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatuses);
 
         var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--resource-group", resourceGroup);
@@ -172,7 +170,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--subscription", subscriptionId);
@@ -190,7 +188,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var errorMessage = "The subscription is not registered to use namespace 'Microsoft.ResourceHealth'.";
         var expectedError = $"Azure Resource Health returned Conflict. The subscription may need the Microsoft.ResourceHealth provider registered, or the provider may still be registering. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ResourceHealthRequestFailedException(HttpStatusCode.Conflict, errorCode, errorMessage));
 
         var response = await ExecuteCommandAsync("--subscription", subscriptionId);
@@ -206,7 +204,7 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
         var subscription = "missing-subscription";
         var expectedError = $"Could not find subscription with name {subscription} (Parameter 'subscriptionName'). To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        Service.ListAvailabilityStatusesAsync(subscription, null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListAvailabilityStatusesAsync(subscription, null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException($"Could not find subscription with name {subscription}", "subscriptionName"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -220,27 +218,14 @@ public class AvailabilityStatusGetCommandTests : CommandUnitTestsBase<Availabili
 
     #region Validation Tests
 
-    [Theory]
-    [InlineData("--subscription")]
-    public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
+    [Fact]
+    public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing()
     {
-        // The subscription option falls back to the Azure CLI profile or AZURE_SUBSCRIPTION_ID env var.
-        // Skip if a CLI profile default is present so the test only runs when
-        // the missing-subscription path is actually exercised.
-        TestEnvironment.SkipIfDefaultSubscriptionConfigured();
-
-        var argsList = new List<string>();
-        if (missingParameter != "--subscription")
-        {
-            argsList.Add("--subscription");
-            argsList.Add("12345678-1234-1234-1234-123456789012");
-        }
-
-        var response = await ExecuteCommandAsync(argsList.ToArray());
+        var response = await ExecuteCommandAsync([]);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
+        Assert.Contains($"Missing Required options: --subscription", response.Message);
     }
 
     #endregion

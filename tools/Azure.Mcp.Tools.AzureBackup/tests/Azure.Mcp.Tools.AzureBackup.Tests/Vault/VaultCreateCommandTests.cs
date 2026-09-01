@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Vault;
 
-public class VaultCreateCommandTests : CommandUnitTestsBase<VaultCreateCommand, IAzureBackupService>
+public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCreateCommand, IAzureBackupService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -30,7 +29,7 @@ public class VaultCreateCommandTests : CommandUnitTestsBase<VaultCreateCommand, 
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("myVault"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new VaultCreateResult("id1", "myVault", "rsv", "eastus", "Succeeded"));
 
         // Act
@@ -53,7 +52,7 @@ public class VaultCreateCommandTests : CommandUnitTestsBase<VaultCreateCommand, 
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -78,7 +77,7 @@ public class VaultCreateCommandTests : CommandUnitTestsBase<VaultCreateCommand, 
         {
             Service.CreateVaultAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new VaultCreateResult("id", "v", "rsv", "eastus", "Succeeded"));
         }
 

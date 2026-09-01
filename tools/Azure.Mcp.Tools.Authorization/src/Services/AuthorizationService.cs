@@ -4,25 +4,18 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
+public class AuthorizationService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAuthorizationService
 {
-    private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
         string subscription,
         string scope,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(scope), scope));
@@ -32,7 +25,6 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             "Microsoft.Authorization/roleAssignments",
             null, // all resource groups
             subscription,
-            retryPolicy,
             ConvertToRoleAssignmentModel,
             "authorizationresources",
             additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
