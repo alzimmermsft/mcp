@@ -1072,6 +1072,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | pricing_get | Show savings plan prices for Standard_E4s_v5 Linux VMs | none |
 | pricing_get | Here's my Bicep template. Can you estimate the monthly cost of this deployment? <bicep_template> | clarification-required |
 
+## Microsoft Purview
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| purview_protectionscopes_compute | Compute the Microsoft Purview protection scopes for user <user_id> in tenant <tenant_id> | none |
+| purview_protectionscopes_compute | Which Purview protection scopes apply when user <user_id> uploads text to domain <domain> in tenant <tenant_id>? | none |
+| purview_protectionscopes_compute | Compute the tenant-level Microsoft Purview protection scopes for tenant <tenant_id> | none |
+| purview_sensitivitylabel_get | List the Microsoft Purview sensitivity labels available to <user_email> in tenant <tenant_id> | none |
+| purview_sensitivitylabel_get | Get Purview sensitivity label <label_id> for <user_email> in tenant <tenant_id> | none |
+| purview_sensitivitylabel_rights_compute | What rights does <user_email> have for file <content_id> labeled <label_id> in tenant <tenant_id>? | none |
+| purview_sensitivitylabel_inheritance_compute | Compute the effective Purview label inherited from <label_ids> for <user_email> in tenant <tenant_id> | none |
+
 ## Azure Service Bus
 
 | Tool Name | Test Prompt | Interaction |

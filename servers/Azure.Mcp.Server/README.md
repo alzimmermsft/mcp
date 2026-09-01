@@ -1307,7 +1307,7 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations
@@ -1342,6 +1342,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Logging, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
+- 🛡️ **Microsoft Purview** - User and tenant protection scopes, sensitivity labels, inherited labels, and usage rights
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management

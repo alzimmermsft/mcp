@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Microsoft Purview tools for user and tenant protection scopes, sensitivity label retrieval, rights computation, and inheritance computation."

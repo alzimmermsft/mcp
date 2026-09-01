@@ -1159,6 +1159,74 @@
       ]
     },
     {
+      "name": "compute_microsoft_purview_protection_scopes",
+      "description": "Compute Microsoft Purview protection scopes for a user or tenant for specified activities and optional policy locations. Returns scope identifiers, activities, execution mode, locations, policy actions, and tenant policy bindings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify data."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Microsoft Purview protection scopes."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only reads Microsoft Purview protection scope information."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles user identifiers and tenant protection policy bindings."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "purview_protectionscopes_compute"
+      ]
+    },
+    {
+      "name": "get_microsoft_purview_sensitivity_label_details",
+      "description": "Retrieve Microsoft Purview sensitivity labels available to a user, compute usage rights for labeled content, and compute the effective inherited label from source labels.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify data."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain is limited to Microsoft Purview sensitivity labels and usage rights."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only retrieves or computes sensitivity label information without modifying content or policy."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles user email addresses, label metadata, and content identifiers."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "purview_sensitivitylabel_get",
+        "purview_sensitivitylabel_inheritance_compute",
+        "purview_sensitivitylabel_rights_compute"
+      ]
+    },
+    {
       "name": "generate_azure_cli_commands",
       "description": "Generate Azure CLI commands from natural language descriptions to help answer questions about Azure environments and operations",
       "toolMetadata": {

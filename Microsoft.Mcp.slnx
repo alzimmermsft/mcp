@@ -401,8 +401,8 @@
     <Project Path="tools/Azure.Mcp.Tools.Purview/src/Azure.Mcp.Tools.Purview.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Purview/tests/" />
-  <Folder Name="/tools/Azure.Mcp.Tools.Purview/tests/Azure.Mcp.Purview.Tests/">
-    <Project Path="tools/Azure.Mcp.Tools.Purview/tests/Azure.Mcp.Purview.Tests/Azure.Mcp.Tools.Purview.Tests.csproj" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Purview/tests/Azure.Mcp.Tools.Purview.Tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Purview/tests/Azure.Mcp.Tools.Purview.Tests/Azure.Mcp.Tools.Purview.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Quota/src/">

@@ -3791,6 +3791,70 @@ azmcp pricing get [--sku <sku>] \
 
 \* At least one filter option is required.
 
+### Microsoft Purview Operations
+
+```bash
+# Compute user-scoped Microsoft Purview protection scopes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp purview protectionscopes compute --tenant <tenant> \
+                                      --user-id <user-id> \
+                                      [--activities <activity> ...] \
+                                      [--policy-locations <kind:location> ...]
+
+# Compute tenant-level Microsoft Purview protection scopes by omitting --user-id
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp purview protectionscopes compute --tenant <tenant> \
+                                      [--activities <activity> ...] \
+                                      [--policy-locations <kind:location> ...]
+```
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--user-id` | No | - | Microsoft Entra user object ID; when omitted, computes tenant-level scopes |
+| `--tenant` | Yes | - | Microsoft Entra tenant GUID or display name |
+| `--activities` | No | - | One or more activities: `UploadText`, `UploadFile`, `DownloadText`, or `DownloadFile` |
+| `--policy-locations` | No | - | One or more locations in `kind:location` format; supported kinds are `policyLocationApplication`, `policyLocationDomain`, and `policyLocationUrl` |
+
+Returns the scope type and identifier plus each matching scope's activities, execution mode, policy locations, policy
+actions, and tenant-level inclusion/exclusion bindings.
+
+User-scoped computation requires Microsoft Graph `ProtectionScopes.Compute.User` or
+`ProtectionScopes.Compute.All`. Tenant-level computation requires `ProtectionScopes.Compute.All`. These permissions
+require administrator consent.
+
+```bash
+# Get all Microsoft Purview sensitivity labels available to a user
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp purview sensitivitylabel get --tenant <tenant> \
+                                   --user-email <user-email> \
+                                   [--label-ids <label-id> ...] \
+                                   [--content-target <content-target>] \
+                                   [--locale <locale>]
+
+# Compute a user's rights for one labeled content item
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp purview sensitivitylabel rights compute --tenant <tenant> \
+                                              --user-email <user-email> \
+                                              --label-id <label-id> \
+                                              --content-format <content-format> \
+                                              --content-id <content-id> \
+                                              [--locale <locale>]
+
+# Compute the effective inherited label from one or more source labels
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp purview sensitivitylabel inheritance compute --tenant <tenant> \
+                                                   --user-email <user-email> \
+                                                   --label-ids <label-id> ... \
+                                                   [--content-formats <content-format> ...] \
+                                                   [--locale <locale>]
+```
+
+Sensitivity label operations default to locale `en-US`. Supported content targets for `get` are `Email`, `Site`,
+`UnifiedGroup`, `Teamwork`, `File`, and `SchematizedData`. These operations use the Microsoft Graph beta sensitivity
+label APIs and are currently available only in the Azure public cloud. Getting labels requires
+`SensitivityLabel.Read` or `SensitivityLabels.Read.All`. Computing rights or inheritance requires
+`SensitivityLabel.Evaluate` or `SensitivityLabel.Evaluate.All`.
+
 ### Azure RBAC Operations
 
 ```bash
